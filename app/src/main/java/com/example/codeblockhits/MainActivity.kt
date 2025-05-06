@@ -46,6 +46,12 @@ import com.example.codeblockhits.ui.theme.CodeBlockHITSTheme
 import kotlin.collections.filter
 import kotlin.collections.toMutableList
 import kotlin.math.roundToInt
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.OutlinedTextFieldDefaults
+
 
 sealed interface CodeBlock {
     val id: Int
@@ -177,9 +183,12 @@ fun BlockField(
     var offsetY by remember { mutableStateOf(0f) }
     var currentValue by remember { mutableStateOf(block.value) }
 
+    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
+    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
+
     Box(
         modifier = modifier
-            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     offsetX += dragAmount.x
@@ -189,47 +198,59 @@ fun BlockField(
     ) {
         Card(
             modifier = Modifier
-                .width(200.dp)
-                .padding(4.dp)
+                .width(220.dp)
+                .padding(8.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
         ) {
-            Column(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = block.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Удалить",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(onClick = onRemove),
+                        tint = MaterialTheme.colorScheme.error
                     )
 
-                    IconButton(
-                        onClick = onRemove,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Удалить"
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "🧩 ${block.name}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 OutlinedTextField(
                     value = currentValue,
                     onValueChange = {
                         currentValue = it
                         onValueChange(it)
                     },
-                    label = { Text(text = stringResource(R.string.Variable_Value)) },
+                    label = { Text("Значение переменной") },
                     modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodySmall
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun BottomPanel(
