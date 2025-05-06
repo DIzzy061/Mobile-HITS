@@ -1,9 +1,7 @@
 <resources>
     <string name="app_name">CodeBlockHITS</string>
-    <string name = "Text_Field">Your Project</string>
-    <string name="Delete_Button">Delete All</string>
-    <string name="Create">Create var</string>
-    <string name="Start_Button">Start</string>
-    <string name="Text_Label">Введите название переменной</string>
+    <string name="Create">Добавить</string>
+    <string name="Text_Label">Имя переменной</string>
+    <string name="Variable_Value">Значение переменной</string>
 
 </resources>
