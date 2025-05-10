@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,14 +46,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.ui.theme.CodeBlockHITSTheme
 import kotlin.collections.filter
-import kotlin.collections.toMutableList
 import kotlin.math.roundToInt
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.OutlinedTextFieldDefaults
-
 
 sealed interface CodeBlock {
     val id: Int
@@ -63,9 +64,17 @@ data class VariableBlock(
     val value: String = ""
 ) : CodeBlock
 
+data class AssignmentBlock(
+    override val id: Int,
+    val variableName: String,
+    val expression: String = ""
+): CodeBlock
+
 data class IfElseBlock(
     override val id: Int,
-    val condition: String = "",
+    val leftOperand: String = "",
+    val operator: String = "==",
+    val rightOperand: String = "",
     val thenBlocks: List<CodeBlock> = emptyList(),
     val elseBlocks: List<CodeBlock> = emptyList()
 ) : CodeBlock
@@ -88,17 +97,20 @@ fun MainScreen() {
     var nextId by remember { mutableStateOf(0) }
 
     Scaffold(
-        bottomBar = {
-            BottomPanel(
-                onAddAssignment = {
-                    blocks = blocks + VariableBlock(id = nextId++, name = "var${nextId}")
+        topBar = {
+            TopMenuPanel(
+                onAddVariable = { name ->
+                    blocks = blocks + VariableBlock(id = nextId++, name = name)
                 },
                 onAddIfElse = {
                     blocks = blocks + IfElseBlock(id = nextId++)
+                },
+                onAddAssignment = {
+                    blocks = blocks + AssignmentBlock(id = nextId++, variableName = "var${nextId}")
                 }
             )
         }
-    ) { paddingValues ->
+    )  { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,12 +121,6 @@ fun MainScreen() {
                     .fillMaxSize()
                     .padding(8.dp)
             ) {
-                TopPanel(onAddBlock = { name ->
-                    blocks = blocks + VariableBlock(id = nextId++, name = name)
-                })
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 Box(modifier = Modifier.weight(1f)) {
                     CodeBlocksList(
                         blocks = blocks,
@@ -132,13 +138,20 @@ fun MainScreen() {
 }
 
 @Composable
-fun TopPanel(onAddBlock: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
+fun TopMenuPanel(
+    onAddVariable: (String) -> Unit,
+    onAddIfElse: () -> Unit,
+    onAddAssignment: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var variableName by remember { mutableStateOf("") }
+    var showVariableDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(8.dp , 20.dp)
+
     ) {
         Row(
             modifier = Modifier
@@ -147,33 +160,97 @@ fun TopPanel(onAddBlock: (String) -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { newText -> text = newText },
-                label = { Text(text = stringResource(R.string.Text_Label)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 16.dp),
-                singleLine = true
+            Text(
+                text = (stringResource(R.string.Select_Block)),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(end = 16.dp)
             )
 
-            Button(
-                onClick = {
-                    if (text.isNotBlank()) {
-                        onAddBlock(text)
-                        text = ""
-                    }
-                },
-                modifier = Modifier.height(40.dp)
+            Box {
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    Text(stringResource(R.string.Add_Block))
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {(stringResource(R.string.Variable))},
+                        onClick = {
+                            showVariableDialog = true
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { (stringResource(R.string.If_Else)) },
+                        onClick = {
+                            onAddIfElse()
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {(stringResource(R.string.Assignment))},
+                        onClick = {
+                            onAddAssignment()
+                            expanded=false
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    if (showVariableDialog) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Text(text = stringResource(R.string.Create))
+                OutlinedTextField(
+                    value = variableName,
+                    onValueChange = { variableName = it },
+                    label = { (stringResource(R.string.Variable_Name))},
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(
+                        onClick = { showVariableDialog = false },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text(stringResource(R.string.Cansel))
+                    }
+                    Button(
+                        onClick = {
+                            if (variableName.isNotBlank()) {
+                                onAddVariable(variableName)
+                                variableName = ""
+                                showVariableDialog = false
+                            }
+                        }
+                    ) {
+                        Text((stringResource(R.string.Create)))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun BlockField(
+fun VariableBlockView(
     block: VariableBlock,
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit = {},
@@ -207,7 +284,19 @@ fun BlockField(
             )
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🧩 ${block.name}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Удалить",
@@ -215,17 +304,6 @@ fun BlockField(
                             .size(20.dp)
                             .clickable(onClick = onRemove),
                         tint = MaterialTheme.colorScheme.error
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "🧩 ${block.name}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
                     )
                 }
 
@@ -237,7 +315,7 @@ fun BlockField(
                         currentValue = it
                         onValueChange(it)
                     },
-                    label = { Text("Значение переменной") },
+                    label = { Text((stringResource(R.string.Variable_Meaning))) },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyMedium,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -251,36 +329,85 @@ fun BlockField(
     }
 }
 
-
 @Composable
-fun BottomPanel(
-    onAddAssignment: () -> Unit,
-    onAddIfElse: () -> Unit
+fun AssignmentBlockView(
+    block: AssignmentBlock,
+    modifier: Modifier = Modifier,
+    onExpressionChange: (String) -> Unit = {},
+    onRemove: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onAddAssignment) {
-                Text("Добавить переменную")
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+    var currentExpr by remember { mutableStateOf(block.expression) }
+
+    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
+    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
+
+    Box(
+        modifier = modifier
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    offsetX += dragAmount.x
+                    offsetY += dragAmount.y
+                }
             }
-            Button(onClick = onAddIfElse) {
-                Text("Add IF-Else")
+    ) {
+        Card(
+            modifier = Modifier
+                .width(250.dp)
+                .padding(8.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "📝 ${block.variableName} =",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Удалить",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(onClick = onRemove),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = currentExpr,
+                    onValueChange = {
+                        currentExpr = it
+                        onExpressionChange(it)
+                    },
+                    label = { (Text(stringResource(R.string.Expression))) },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
             }
         }
     }
 }
-
 
 @Composable
 fun IfElseBlockView(
@@ -289,15 +416,19 @@ fun IfElseBlockView(
     onUpdate: (IfElseBlock) -> Unit,
     onRemove: () -> Unit
 ) {
-    var condition by remember { mutableStateOf(block.condition) }
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
+    var expanded by remember { mutableStateOf(false) }
+    val operators = listOf("==", "!=", "<", ">", "<=", ">=")
+
+    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
+    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
 
     Box(
         modifier = modifier
-            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .pointerInput(Unit) {
-                detectDragGestures { _, dragAmount ->
+                detectDragGestures { change, dragAmount ->
                     offsetX += dragAmount.x
                     offsetY += dragAmount.y
                 }
@@ -307,16 +438,49 @@ fun IfElseBlockView(
             Column(modifier = Modifier.padding(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("IF", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.width(8.dp))
+
                     OutlinedTextField(
-                        value = condition,
-                        onValueChange = {
-                            condition = it
-                            onUpdate(block.copy(condition = it))
+                        value = block.leftOperand,
+                        onValueChange = { newLeft ->
+                            onUpdate(block.copy(leftOperand = newLeft))
                         },
-                        modifier = Modifier.weight(1f),
-                        label = { Text("Condition") }
+                        modifier = Modifier.width(60.dp),
+                        label = { Text("Var") }
                     )
+
+                    Box {
+                        Text(
+                            text = block.operator,
+                            modifier = Modifier
+                                .clickable { expanded = true }
+                                .padding(8.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            operators.forEach { op ->
+                                DropdownMenuItem(
+                                    text = { Text(op) },
+                                    onClick = {
+                                        onUpdate(block.copy(operator = op))
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = block.rightOperand,
+                        onValueChange = { newRight ->
+                            onUpdate(block.copy(rightOperand = newRight))
+                        },
+                        modifier = Modifier.width(60.dp),
+                        label = { Text("Value") }
+                    )
+
                     IconButton(onClick = onRemove) {
                         Icon(Icons.Default.Close, "Remove")
                     }
@@ -325,27 +489,15 @@ fun IfElseBlockView(
                 Text("THEN:", style = MaterialTheme.typography.labelMedium)
                 CodeBlocksList(
                     blocks = block.thenBlocks,
-                    onRemove = { id ->
-                        onUpdate(block.copy(thenBlocks = block.thenBlocks.filter { it.id != id }))
-                    },
-                    onUpdate = { updated ->
-                        val newThen = block.thenBlocks.map { if (it.id == updated.id) updated else it }
-                        onUpdate(block.copy(thenBlocks = newThen))
-                    },
-                    modifier = Modifier.padding(start = 16.dp)
+                    onRemove = { },
+                    onUpdate = { }
                 )
 
                 Text("ELSE:", style = MaterialTheme.typography.labelMedium)
                 CodeBlocksList(
                     blocks = block.elseBlocks,
-                    onRemove = { id ->
-                        onUpdate(block.copy(elseBlocks = block.elseBlocks.filter { it.id != id }))
-                    },
-                    onUpdate = { updated ->
-                        val newElse = block.elseBlocks.map { if (it.id == updated.id) updated else it }
-                        onUpdate(block.copy(elseBlocks = newElse))
-                    },
-                    modifier = Modifier.padding(start = 16.dp)
+                    onRemove = { },
+                    onUpdate = { }
                 )
             }
         }
@@ -362,42 +514,36 @@ fun CodeBlocksList(
     Column(modifier = modifier) {
         blocks.forEach { block ->
             when (block) {
-                is VariableBlock -> BlockField(
+                is VariableBlock -> VariableBlockView(
                     block = block,
                     onRemove = { onRemove(block.id) },
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
+                is AssignmentBlock -> AssignmentBlockView(
+                    block = block,
+                    onExpressionChange = { newExpr ->
+                        onUpdate(block.copy(expression = newExpr))
+                    },
+                    onRemove = { onRemove(block.id) },
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+
                 is IfElseBlock -> IfElseBlockView(
                     block = block,
                     onUpdate = onUpdate,
                     onRemove = { onRemove(block.id) },
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
+
             }
         }
     }
 }
 
-
-@Preview(showBackground =true)
-@Composable
-fun GreetingPreview()
-{
-    CodeBlockHITSTheme {
-    MainScreen()
-    }
-}
 @Preview(showBackground = true)
 @Composable
-fun BlockFieldPreview() {
+fun GreetingPreview() {
     CodeBlockHITSTheme {
-        Column {
-            TopPanel(onAddBlock = {})
-            BlockField(
-                block = VariableBlock(1, "Пример переменной", "42"),
-                onRemove = {}
-            )
-
-        }
+        MainScreen()
     }
 }

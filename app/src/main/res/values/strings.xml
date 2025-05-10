@@ -1,7 +1,14 @@
 <resources>
     <string name="app_name">CodeBlockHITS</string>
-    <string name="Create">Добавить</string>
-    <string name="Text_Label">Имя переменной</string>
-    <string name="Variable_Value">Значение переменной</string>
+    <string name="Select_Block">Выберите блок:</string>
+    <string name="Add_Block">Добавить блок</string>
+    <string name="Variable">Переменная</string>
+    <string name="If_Else">IF-Else</string>
+    <string name="Assignment">Арифметика</string>
+    <string name="Variable_Name">Имя переменной</string>
+    <string name="Cansel">Отмена</string>
+    <string name="Create">Создать</string>
+    <string name="Variable_Meaning">Значение переменной</string>
+    <string name="Expression">Выражение</string>
 
 </resources>
