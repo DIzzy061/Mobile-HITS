@@ -3,12 +3,13 @@
     <string name="Select_Block">Выберите блок:</string>
     <string name="Add_Block">Добавить блок</string>
     <string name="Variable">Переменная</string>
+   <string name="Calculate">Вычислить все</string>
     <string name="If_Else">IF-Else</string>
-    <string name="Assignment">Арифметика</string>
     <string name="Variable_Name">Имя переменной</string>
-    <string name="Cansel">Отмена</string>
-    <string name="Create">Создать</string>
     <string name="Variable_Meaning">Значение переменной</string>
     <string name="Expression">Выражение</string>
-
+    <string name="Calculate_Variable_Meaning_Now">Высчитать сейчас</string>
+    <string name="Left_Operand">Левый операнд</string>
+    <string name="Right_Operand">Правый опернад</string>
+    <string name="Delete_If_Else_Block">Удалить блок If-Else</string>
 </resources>
