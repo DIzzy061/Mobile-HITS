@@ -6,6 +6,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.*
+import androidx.compose.foundation.layout.fillMaxWidth
+
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 @Composable
 fun CodeBlocksList(
@@ -16,10 +20,12 @@ fun CodeBlocksList(
     variablesMap: Map<String, String>,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
     ) {
-        blocks.forEach { block ->
+        items(blocks, key = { it.id }) { block ->
             when (block) {
                 is VariableBlock -> VariableBlockView(
                     block = block,
