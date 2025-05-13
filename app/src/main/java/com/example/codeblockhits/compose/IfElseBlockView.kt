@@ -136,38 +136,84 @@ fun IfElseBlockView(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text("Тело Then-блока (${block.thenBlocks.size} блоков)", color = Color.Green)
-                CodeBlocksList(
-                    blocks = block.thenBlocks,
-                    onRemove = { blockId ->
-                        val newThenBlocks = block.thenBlocks.filter { it.id != blockId }
-                        onUpdate(block.copy(thenBlocks = newThenBlocks))
-                    },
-                    onUpdate = { updatedBlock ->
-                        val newThenBlocks =
-                            block.thenBlocks.map { if (it.id == updatedBlock.id) updatedBlock else it }
-                        onUpdate(block.copy(thenBlocks = newThenBlocks))
-                    },
-                    onAddToIfElse = onAddToIfElse,
-                    variablesMap = emptyMap()
-                )
+                Column {
+                    block.thenBlocks.forEach { childBlock ->
+                        when (childBlock) {
+                            is VariableBlock -> VariableBlockView(
+                                block = childBlock,
+                                onValueChange = { newValue ->
+                                    val updated = childBlock.copy(value = newValue)
+                                    val newThenBlocks = block.thenBlocks.map {
+                                        if (it.id == updated.id) updated else it
+                                    }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                onRemove = {
+                                    val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                variablesMap = emptyMap()
+                            )
+
+                            is IfElseBlock -> IfElseBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val newThenBlocks = block.thenBlocks.map {
+                                        if (it.id == updatedChild.id) updatedChild else it
+                                    }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                onRemove = {
+                                    val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                onAddToIfElse = onAddToIfElse
+                            )
+                        }
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text("Тело Else-блока (${block.elseBlocks.size} блоков)", color = Color.Red)
-                CodeBlocksList(
-                    blocks = block.elseBlocks,
-                    onRemove = { blockId ->
-                        val newElseBlocks = block.elseBlocks.filter { it.id != blockId }
-                        onUpdate(block.copy(elseBlocks = newElseBlocks))
-                    },
-                    onUpdate = { updatedBlock ->
-                        val newElseBlocks =
-                            block.elseBlocks.map { if (it.id == updatedBlock.id) updatedBlock else it }
-                        onUpdate(block.copy(elseBlocks = newElseBlocks))
-                    },
-                    onAddToIfElse = onAddToIfElse,
-                    variablesMap = emptyMap()
-                )
+                Column {
+                    block.elseBlocks.forEach { childBlock ->
+                        when (childBlock) {
+                            is VariableBlock -> VariableBlockView(
+                                block = childBlock,
+                                onValueChange = { newValue ->
+                                    val updated = childBlock.copy(value = newValue)
+                                    val newElseBlocks = block.elseBlocks.map {
+                                        if (it.id == updated.id) updated else it
+                                    }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                onRemove = {
+                                    val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                variablesMap = emptyMap()
+                            )
+
+                            is IfElseBlock -> IfElseBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val newElseBlocks = block.elseBlocks.map {
+                                        if (it.id == updatedChild.id) updatedChild else it
+                                    }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                onRemove = {
+                                    val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                onAddToIfElse = onAddToIfElse
+                            )
+                        }
+                    }
+                }
+
 
                 Spacer(modifier = Modifier.height(8.dp))
 
