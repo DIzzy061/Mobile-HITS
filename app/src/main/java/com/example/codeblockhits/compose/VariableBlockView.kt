@@ -1,5 +1,6 @@
 package com.example.codeblockhits.compose
 
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -52,6 +53,7 @@ fun VariableBlockView(
 
     val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
     val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
+    val DeleteString = stringResource(R.string.Delete)
 
     val computedValue = remember(block.value, variablesMap) {
         evaluateExpression(block.value, variablesMap)
@@ -93,7 +95,7 @@ fun VariableBlockView(
 
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Удалить",
+                        contentDescription = DeleteString,
                         modifier = Modifier
                             .size(20.dp)
                             .clickable(onClick = onRemove),

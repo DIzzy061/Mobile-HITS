@@ -17,36 +17,44 @@ fun evaluateExpression(expression: String, variables: Map<String, String>): Stri
     }
 }
 
-fun evaluateIfElseBlock(
-    block: IfElseBlock,
-    variables: Map<String, String>
-): IfElseBlock {
-    val left = evaluateExpression(block.leftOperand, variables).toDoubleOrNull() ?: return block
-    val right = evaluateExpression(block.rightOperand, variables).toDoubleOrNull() ?: return block
-
-    val condition = when (block.operator) {
-        "==" -> left == right
-        "!=" -> left != right
-        ">" -> left > right
-        "<" -> left < right
-        ">=" -> left >= right
-        "<=" -> left <= right
-        else -> false
-    }
-
-    val evaluatedThen = block.thenBlocks.map { evaluateBlock(it, variables) }
-    val evaluatedElse = block.elseBlocks.map { evaluateBlock(it, variables) }
-
-    return block.copy(
-        thenBlocks = if (condition) evaluatedThen else block.thenBlocks,
-        elseBlocks = if (!condition) evaluatedElse else block.elseBlocks
-    )
-}
-
 fun evaluateBlock(block: CodeBlock, variables: Map<String, String>): CodeBlock {
     return when (block) {
         is VariableBlock -> block.copy(value = evaluateExpression(block.value, variables))
-        is IfElseBlock -> evaluateIfElseBlock(block, variables)
+        is AssignmentBlock -> {
+            val evaluated = evaluateExpression(block.expression, variables)
+            AssignmentBlock(id = block.id, target = block.target, expression = evaluated)
+        }
+        is IfElseBlock -> {
+            val left = evaluateExpression(block.leftOperand, variables).toDoubleOrNull()
+            val right = evaluateExpression(block.rightOperand, variables).toDoubleOrNull()
+            val condition = when (block.operator) {
+                "==" -> left == right
+                "!=" -> left != right
+                ">" -> left != null && right != null && left > right
+                "<" -> left != null && right != null && left < right
+                ">=" -> left != null && right != null && left >= right
+                "<=" -> left != null && right != null && left <= right
+                else -> false
+            }
+
+            val newThen = if (condition) {
+                block.thenBlocks.map {
+                    if (it is VariableBlock)
+                        it.copy(value = evaluateExpression(it.value, variables))
+                    else it
+                }
+            } else block.thenBlocks
+
+            val newElse = if (!condition) {
+                block.elseBlocks.map {
+                    if (it is VariableBlock)
+                        it.copy(value = evaluateExpression(it.value, variables))
+                    else it
+                }
+            } else block.elseBlocks
+
+            block.copy(thenBlocks = newThen, elseBlocks = newElse)
+        }
         else -> block
     }
 }
@@ -72,7 +80,7 @@ fun evaluateMathExpression(expression: String): Double {
         fun parse(): Double {
             nextChar()
             val x = parseExpression()
-            if (pos < expression.length) throw RuntimeException("Unexpected: " + ch)
+            if (pos < expression.length) throw RuntimeException("Невозможно " + ch)
             return x
         }
 
@@ -112,7 +120,7 @@ fun evaluateMathExpression(expression: String): Double {
                 while (ch in '0'..'9' || ch == '.') nextChar()
                 x = expression.substring(startPos, pos).toDouble()
             } else {
-                throw RuntimeException("Unexpected: " + ch)
+                throw RuntimeException("Невозможно " + ch)
             }
 
             if (eat('^')) x = Math.pow(x, parseFactor())
@@ -121,3 +129,5 @@ fun evaluateMathExpression(expression: String): Double {
         }
     }.parse()
 }
+
+

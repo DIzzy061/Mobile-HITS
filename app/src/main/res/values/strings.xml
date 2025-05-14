@@ -5,6 +5,7 @@
     <string name="Variable">Переменная</string>
    <string name="Calculate">Вычислить все</string>
     <string name="If_Else">IF-Else</string>
+    <string name="Delete">Удалить</string>
     <string name="Variable_Name">Имя переменной</string>
     <string name="Variable_Meaning">Значение переменной</string>
     <string name="Expression">Выражение</string>
@@ -12,4 +13,12 @@
     <string name="Left_Operand">Левый операнд</string>
     <string name="Right_Operand">Правый опернад</string>
     <string name="Delete_If_Else_Block">Удалить блок If-Else</string>
+    <string name="Error">Ошибка</string>
+    <string name="OK">Ok</string>
+    <string name="Cansel">Отмена</string>
+    <string name="Add_Block_To_Then">Добавить блок в Then</string>
+    <string name="Add_Assignment_To_Then">Добавить присваивание в Then</string>
+    <string name="This_Block_Has_Variable_Whith_This_Name">Переменная с таким именем уже существует в этом блоке</string>
+    <string name="Add_Block_To_Else">Добавить блок в Else</string>
+    <string name="Add_Assignment_To_Else">Добавить присваивание в Else</string>
 </resources>

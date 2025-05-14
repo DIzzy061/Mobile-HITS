@@ -13,12 +13,15 @@ import androidx.compose.foundation.lazy.items
 
 @Composable
 fun CodeBlocksList(
+    nextId: Int,
+    onIdIncrement: () -> Unit,
     blocks: List<CodeBlock>,
     onRemove: (Int) -> Unit,
     onUpdate: (CodeBlock) -> Unit,
     onAddToIfElse: ((Int, CodeBlock, Boolean) -> Unit)? = null,
     variablesMap: Map<String, String>,
     modifier: Modifier = Modifier
+
 ) {
     LazyColumn(
         modifier = modifier
@@ -40,11 +43,21 @@ fun CodeBlocksList(
                     block = block,
                     onUpdate = onUpdate,
                     onRemove = { onRemove(block.id) },
-                    onAddToIfElse = { parentId, newBlock, isThen ->
-                        onAddToIfElse?.invoke(parentId, newBlock, isThen)
-                    },
+                    onAddToIfElse = onAddToIfElse!!,
+                    variablesMap = variablesMap,
+                    nextId = nextId,
+                    onIdIncrement = onIdIncrement,
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
+                is AssignmentBlock -> AssignmentBlockView(
+                    block = block,
+                    onUpdate = { updated -> onUpdate(updated) },
+                    onRemove = { onRemove(block.id) },
+                    variablesMap = variablesMap,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+
+
             }
         }
     }

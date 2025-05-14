@@ -2,32 +2,18 @@ package com.example.codeblockhits.compose
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.example.codeblockhits.compose.CodeBlocksList
+import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
 
@@ -37,6 +23,9 @@ fun IfElseBlockView(
     onUpdate: (CodeBlock) -> Unit,
     onRemove: () -> Unit,
     onAddToIfElse: (Int, CodeBlock, Boolean) -> Unit,
+    variablesMap: Map<String, String>,
+    nextId: Int,
+    onIdIncrement: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var leftOperand by remember { mutableStateOf(block.leftOperand) }
@@ -50,42 +39,103 @@ fun IfElseBlockView(
 
     val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
     val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
+
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogTargetThen by remember { mutableStateOf(true) }
+    var newVarName by remember { mutableStateOf("") }
+
+    val targetList = if (dialogTargetThen) block.thenBlocks else block.elseBlocks
+    val duplicate = targetList.filterIsInstance<VariableBlock>().any { it.name == newVarName }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                Button(onClick = { showErrorDialog = false }) {
+                    Text(stringResource(R.string.OK))
+                }
+            },
+            title = { Text(stringResource(R.string.Error)) },
+            text = { Text(stringResource(R.string.This_Block_Has_Variable_Whith_This_Name)) }
+        )
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+                newVarName = ""
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (duplicate) {
+                        showErrorDialog = true
+                    } else {
+                        onAddToIfElse(
+                            block.id,
+                            VariableBlock(id = nextId, name = newVarName, value = "0"),
+                            dialogTargetThen
+                        )
+                        onIdIncrement()
+                        showDialog = false
+                        newVarName = ""
+                    }
+                }) {
+                    Text(stringResource(R.string.Add_Block))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    newVarName = ""
+                }) {
+                    Text(stringResource(R.string.Cansel))
+                }
+            },
+            title = { Text(stringResource(R.string.Variable_Name))},
+            text = {
+                OutlinedTextField(
+                    value = newVarName,
+                    onValueChange = { newVarName = it },
+                    label = { Text(stringResource(R.string.Variable_Name)) }
+                )
+            }
+        )
+    }
+
     Box(
         modifier = modifier
             .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
+                detectDragGestures { _, dragAmount ->
                     offsetX += dragAmount.x
                     offsetY += dragAmount.y
                 }
             }
     ) {
         Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = modifier.fillMaxWidth().padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
+
                     OutlinedTextField(
                         value = leftOperand,
                         onValueChange = {
                             leftOperand = it
-                            onUpdate(
-                                block.copy(
-                                    leftOperand = it,
-                                    operator = operator,
-                                    rightOperand = rightOperand
-                                )
-                            )
+                            onUpdate(block.copy(leftOperand = it, operator = operator, rightOperand = rightOperand))
                         },
-                        label = { Text("Левый операнд") },
+                        label = { Text(stringResource(R.string.Left_Operand)) },
                         modifier = Modifier.weight(1f)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
+
 
                     Box {
                         Button(onClick = { operatorMenuExpanded = true }) {
@@ -101,13 +151,7 @@ fun IfElseBlockView(
                                     onClick = {
                                         operator = op
                                         operatorMenuExpanded = false
-                                        onUpdate(
-                                            block.copy(
-                                                leftOperand = leftOperand,
-                                                operator = op,
-                                                rightOperand = rightOperand
-                                            )
-                                        )
+                                        onUpdate(block.copy(leftOperand = leftOperand, operator = op, rightOperand = rightOperand))
                                     }
                                 )
                             }
@@ -116,26 +160,22 @@ fun IfElseBlockView(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
+
                     OutlinedTextField(
                         value = rightOperand,
                         onValueChange = {
                             rightOperand = it
-                            onUpdate(
-                                block.copy(
-                                    leftOperand = leftOperand,
-                                    operator = operator,
-                                    rightOperand = it
-                                )
-                            )
+                            onUpdate(block.copy(leftOperand = leftOperand, operator = operator, rightOperand = it))
                         },
-                        label = { Text("Правый операнд") },
+                        label = { Text(stringResource(R.string.Right_Operand))},
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Тело Then-блока (${block.thenBlocks.size} блоков)", color = Color.Green)
+
+                Text("Тело Then-блока (${block.thenBlocks.size} блоков)", color = Color.Blue)
                 Column {
                     block.thenBlocks.forEach { childBlock ->
                         when (childBlock) {
@@ -152,9 +192,8 @@ fun IfElseBlockView(
                                     val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
                                     onUpdate(block.copy(thenBlocks = newThenBlocks))
                                 },
-                                variablesMap = emptyMap()
+                                variablesMap = variablesMap
                             )
-
                             is IfElseBlock -> IfElseBlockView(
                                 block = childBlock,
                                 onUpdate = { updatedChild ->
@@ -167,14 +206,43 @@ fun IfElseBlockView(
                                     val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
                                     onUpdate(block.copy(thenBlocks = newThenBlocks))
                                 },
-                                onAddToIfElse = onAddToIfElse
+                                onAddToIfElse = onAddToIfElse,
+                                variablesMap = variablesMap,
+                                nextId = nextId,
+                                onIdIncrement = onIdIncrement
+                            )
+                            is AssignmentBlock -> AssignmentBlockView(
+                                block = childBlock,
+                                onUpdate = { updated ->
+                                    val newThenBlocks = block.thenBlocks.map {
+                                        if (it.id == updated.id) updated else it
+                                    }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                onRemove = {
+                                    val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                variablesMap = variablesMap
                             )
                         }
                     }
+                    Button(onClick = {
+                        dialogTargetThen = true
+                        showDialog = true
+                    }, modifier = Modifier.padding(top = 8.dp)) {
+                        Text(stringResource(R.string.Add_Block_To_Then))
+                    }
+                    Button(onClick = {
+                        onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), true)
+                        onIdIncrement()
+                    }, modifier = Modifier.padding(top = 4.dp)) {
+                        Text(stringResource(R.string.Add_Assignment_To_Then))
+                    }
                 }
 
-
                 Spacer(modifier = Modifier.height(8.dp))
+
 
                 Text("Тело Else-блока (${block.elseBlocks.size} блоков)", color = Color.Red)
                 Column {
@@ -193,9 +261,8 @@ fun IfElseBlockView(
                                     val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
                                     onUpdate(block.copy(elseBlocks = newElseBlocks))
                                 },
-                                variablesMap = emptyMap()
+                                variablesMap = variablesMap
                             )
-
                             is IfElseBlock -> IfElseBlockView(
                                 block = childBlock,
                                 onUpdate = { updatedChild ->
@@ -208,21 +275,47 @@ fun IfElseBlockView(
                                     val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
                                     onUpdate(block.copy(elseBlocks = newElseBlocks))
                                 },
-                                onAddToIfElse = onAddToIfElse
+                                onAddToIfElse = onAddToIfElse,
+                                variablesMap = variablesMap,
+                                nextId = nextId,
+                                onIdIncrement = onIdIncrement
+                            )
+                            is AssignmentBlock -> AssignmentBlockView(
+                                block = childBlock,
+                                onUpdate = { updated ->
+                                    val newElseBlocks = block.elseBlocks.map {
+                                        if (it.id == updated.id) updated else it
+                                    }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                onRemove = {
+                                    val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                variablesMap = variablesMap
                             )
                         }
                     }
+                    Button(onClick = {
+                        dialogTargetThen = false
+                        showDialog = true
+                    }, modifier = Modifier.padding(top = 8.dp)) {
+                        Text(stringResource(R.string.Add_Block_To_Else))
+                    }
+                    Button(onClick = {
+                        onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), false)
+                        onIdIncrement()
+                    }, modifier = Modifier.padding(top = 4.dp)) {
+                        Text(stringResource(R.string.Add_Assignment_To_Else))
+                    }
                 }
-
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = onRemove,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Удалить If/Else блок")
+                Button(onClick = onRemove, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.Delete_If_Else_Block))
                 }
             }
         }
-    }}
+    }
+}
