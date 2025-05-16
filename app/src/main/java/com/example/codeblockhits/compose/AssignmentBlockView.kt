@@ -4,16 +4,18 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
+
 @Composable
 fun AssignmentBlockView(
     block: AssignmentBlock,
@@ -25,42 +27,79 @@ fun AssignmentBlockView(
     var target by remember { mutableStateOf(block.target) }
     var expr by remember { mutableStateOf(block.expression) }
 
-    Card(
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+
+    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
+    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
+
+    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row {
-                OutlinedTextField(
-                    value = target,
-                    onValueChange = {
-                        target = it
-                        onUpdate(block.copy(target = it, expression = expr))
-                    },
-                    label = { Text("Переменная") },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                OutlinedTextField(
-                    value = expr,
-                    onValueChange = {
-                        expr = it
-                        onUpdate(block.copy(target = target, expression = it))
-                    },
-                    label = { Text("Выражение") },
-                    modifier = Modifier.weight(2f)
-                )
+            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    offsetX += dragAmount.x
+                    offsetY += dragAmount.y
+                }
             }
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "📝 Присваивание",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                    IconButton(onClick = onRemove) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Удалить",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
 
-            Button(onClick = onRemove, modifier = Modifier.fillMaxWidth()) {
-                Text("Удалить присваивание")
+                Row {
+                    OutlinedTextField(
+                        value = target,
+                        onValueChange = {
+                            target = it
+                            onUpdate(block.copy(target = it, expression = expr))
+                        },
+                        label = { Text("Переменная") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "=",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = expr,
+                        onValueChange = {
+                            expr = it
+                            onUpdate(block.copy(target = target, expression = it))
+                        },
+                        label = { Text("Выражение") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

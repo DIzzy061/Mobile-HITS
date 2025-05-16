@@ -1,19 +1,19 @@
 package com.example.codeblockhits.compose
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.codeblockhits.data.CodeBlock
-import com.example.codeblockhits.data.IfElseBlock
-import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
+import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,9 +23,76 @@ fun MainScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    // State for scaling and panning
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
     fun getVariablesMap(): Map<String, String> {
         return blocks.filterIsInstance<VariableBlock>()
             .associate { it.name to it.value }
+    }
+
+    fun evaluateAllBlocks() {
+        val variablesMap = getVariablesMap()
+        blocks.forEach { block ->
+            when (block) {
+                is VariableBlock -> {
+                    val result = evaluateExpression(block.value, variablesMap)
+                    if (result != block.value) {
+                        blocks = blocks.map {
+                            if (it.id == block.id) block.copy(value = result)
+                            else it
+                        }
+                    }
+                }
+                is AssignmentBlock -> {
+                    val result = evaluateExpression(block.expression, variablesMap)
+                    blocks = blocks.map {
+                        if (it is VariableBlock && it.name == block.target) {
+                            it.copy(value = result)
+                        } else {
+                            it
+                        }
+                    }
+                }
+                is IfElseBlock -> {
+                    val condition = evaluateExpression(
+                        "${block.leftOperand} ${block.operator} ${block.rightOperand}",
+                        variablesMap
+                    )
+                    if (condition == "true") {
+                        block.thenBlocks.forEach { thenBlock ->
+                            if (thenBlock is AssignmentBlock) {
+                                val result = evaluateExpression(thenBlock.expression, variablesMap)
+                                blocks = blocks.map {
+                                    if (it is VariableBlock && it.name == thenBlock.target) {
+                                        it.copy(value = result)
+                                    } else {
+                                        it
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        block.elseBlocks.forEach { elseBlock ->
+                            if (elseBlock is AssignmentBlock) {
+                                val result = evaluateExpression(elseBlock.expression, variablesMap)
+                                blocks = blocks.map {
+                                    if (it is VariableBlock && it.name == elseBlock.target) {
+                                        it.copy(value = result)
+                                    } else {
+                                        it
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar("All blocks evaluated successfully")
+        }
     }
 
     Scaffold(
@@ -35,7 +102,7 @@ fun MainScreen() {
                     val variableNames = blocks.filterIsInstance<VariableBlock>().map { it.name }
                     if (variableNames.contains(name)) {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Переменная с именем '$name' уже существует")
+                            snackbarHostState.showSnackbar("Variable '$name' already exists")
                         }
                     } else {
                         blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
@@ -43,22 +110,48 @@ fun MainScreen() {
                 },
                 onAddIfElse = {
                     blocks = blocks + IfElseBlock(id = nextId++)
-                }
+                },
+                onEvaluateAll = { evaluateAllBlocks() }
             )
         },
-        snackbarHost = { androidx.compose.material3.SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Column(
+            // Grid background
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp)
+                    .background(MaterialTheme.colorScheme.background)
+                    .drawGrid()
+            )
+
+            // Workspace content
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            scale = (scale * zoom).coerceIn(0.5f, 3f)
+                            offset += pan
+                        }
+                    },
+                color = Color.Transparent
             ) {
-                Box(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        )
+                ) {
                     CodeBlocksList(
                         blocks = blocks,
                         onRemove = { id ->
@@ -84,71 +177,6 @@ fun MainScreen() {
                         nextId = nextId,
                         onIdIncrement = { nextId++ }
                     )
-                }
-
-                Button(
-                    onClick = {
-                        val variables = mutableMapOf<String, String>()
-                        val updatedBlocks = mutableListOf<CodeBlock>()
-
-                        fun evaluate(block: CodeBlock): CodeBlock {
-                            return when (block) {
-                                is VariableBlock -> {
-                                    val newValue = evaluateExpression(block.value, variables)
-                                    variables[block.name] = newValue
-                                    block.copy(value = newValue)
-                                }
-                                is AssignmentBlock -> {
-                                    val result = evaluateExpression(block.expression, variables)
-                                    variables[block.target] = result
-
-                                    val index = updatedBlocks.indexOfFirst {
-                                        it is VariableBlock && it.name == block.target
-                                    }
-
-                                    if (index != -1) {
-                                        val vb = updatedBlocks[index] as VariableBlock
-                                        updatedBlocks[index] = vb.copy(value = result)
-                                    }
-
-                                    block.copy(expression = result)
-                                }
-                                is IfElseBlock -> {
-                                    val left = evaluateExpression(block.leftOperand, variables).toDoubleOrNull()
-                                    val right = evaluateExpression(block.rightOperand, variables).toDoubleOrNull()
-                                    val condition = when (block.operator) {
-                                        "==" -> left == right
-                                        "!=" -> left != right
-                                        ">" -> left != null && right != null && left > right
-                                        "<" -> left != null && right != null && left < right
-                                        ">=" -> left != null && right != null && left >= right
-                                        "<=" -> left != null && right != null && left <= right
-                                        else -> false
-                                    }
-
-                                    val thenBlocks = block.thenBlocks.map { evaluate(it) }
-                                    val elseBlocks = block.elseBlocks.map { evaluate(it) }
-
-                                    block.copy(
-                                        thenBlocks = thenBlocks,
-                                        elseBlocks = elseBlocks
-                                    )
-                                }
-                                else -> block
-                            }
-                        }
-
-                        blocks.forEach { original ->
-                            updatedBlocks.add(evaluate(original))
-                        }
-
-                        blocks = updatedBlocks
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    Text(stringResource(R.string.Calculate))
                 }
             }
         }

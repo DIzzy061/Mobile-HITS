@@ -4,6 +4,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -109,21 +111,41 @@ fun IfElseBlockView(
         modifier = modifier
             .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
             .pointerInput(Unit) {
-                detectDragGestures { _, dragAmount ->
+                detectDragGestures { change, dragAmount ->
                     offsetX += dragAmount.x
                     offsetY += dragAmount.y
                 }
             }
     ) {
         Card(
-            modifier = modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🔀 If/Else",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    IconButton(onClick = onRemove) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Удалить",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-
                     OutlinedTextField(
                         value = leftOperand,
                         onValueChange = {
@@ -135,7 +157,6 @@ fun IfElseBlockView(
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
-
 
                     Box {
                         Button(onClick = { operatorMenuExpanded = true }) {
@@ -160,22 +181,20 @@ fun IfElseBlockView(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-
                     OutlinedTextField(
                         value = rightOperand,
                         onValueChange = {
                             rightOperand = it
                             onUpdate(block.copy(leftOperand = leftOperand, operator = operator, rightOperand = it))
                         },
-                        label = { Text(stringResource(R.string.Right_Operand))},
+                        label = { Text(stringResource(R.string.Right_Operand)) },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-
-                Text("Тело Then-блока (${block.thenBlocks.size} блоков)", color = Color.Blue)
+                Text("Then блоки (${block.thenBlocks.size})", color = Color.Green)
                 Column {
                     block.thenBlocks.forEach { childBlock ->
                         when (childBlock) {
@@ -213,9 +232,9 @@ fun IfElseBlockView(
                             )
                             is AssignmentBlock -> AssignmentBlockView(
                                 block = childBlock,
-                                onUpdate = { updated ->
+                                onUpdate = { updatedChild ->
                                     val newThenBlocks = block.thenBlocks.map {
-                                        if (it.id == updated.id) updated else it
+                                        if (it.id == updatedChild.id) updatedChild else it
                                     }
                                     onUpdate(block.copy(thenBlocks = newThenBlocks))
                                 },
@@ -243,8 +262,7 @@ fun IfElseBlockView(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-
-                Text("Тело Else-блока (${block.elseBlocks.size} блоков)", color = Color.Red)
+                Text("Else блоки (${block.elseBlocks.size})", color = Color.Red)
                 Column {
                     block.elseBlocks.forEach { childBlock ->
                         when (childBlock) {
@@ -282,9 +300,9 @@ fun IfElseBlockView(
                             )
                             is AssignmentBlock -> AssignmentBlockView(
                                 block = childBlock,
-                                onUpdate = { updated ->
+                                onUpdate = { updatedChild ->
                                     val newElseBlocks = block.elseBlocks.map {
-                                        if (it.id == updated.id) updated else it
+                                        if (it.id == updatedChild.id) updatedChild else it
                                     }
                                     onUpdate(block.copy(elseBlocks = newElseBlocks))
                                 },
@@ -308,12 +326,6 @@ fun IfElseBlockView(
                     }, modifier = Modifier.padding(top = 4.dp)) {
                         Text(stringResource(R.string.Add_Assignment_To_Else))
                     }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(onClick = onRemove, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.Delete_If_Else_Block))
                 }
             }
         }
