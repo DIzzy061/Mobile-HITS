@@ -36,12 +36,6 @@ fun IfElseBlockView(
     val operatorOptions = listOf("==", "!=", ">", "<", ">=", "<=")
     var operatorMenuExpanded by remember { mutableStateOf(false) }
 
-    var offsetX by remember { mutableStateOf(0f) }
-    var offsetY by remember { mutableStateOf(0f) }
-
-    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
-    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
-
     var showDialog by remember { mutableStateOf(false) }
     var dialogTargetThen by remember { mutableStateOf(true) }
     var newVarName by remember { mutableStateOf("") }
@@ -109,13 +103,6 @@ fun IfElseBlockView(
 
     Box(
         modifier = modifier
-            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    offsetX += dragAmount.x
-                    offsetY += dragAmount.y
-                }
-            }
     ) {
         Card(
             modifier = Modifier

@@ -23,7 +23,6 @@ fun MainScreen() {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // State for scaling and panning
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -45,6 +44,7 @@ fun MainScreen() {
                         }
                     }
                 }
+
                 is AssignmentBlock -> {
                     val result = evaluateExpression(block.expression, variablesMap)
                     blocks = blocks.map {
@@ -55,42 +55,14 @@ fun MainScreen() {
                         }
                     }
                 }
+
                 is IfElseBlock -> {
-                    val condition = evaluateExpression(
-                        "${block.leftOperand} ${block.operator} ${block.rightOperand}",
-                        variablesMap
-                    )
-                    if (condition == "true") {
-                        block.thenBlocks.forEach { thenBlock ->
-                            if (thenBlock is AssignmentBlock) {
-                                val result = evaluateExpression(thenBlock.expression, variablesMap)
-                                blocks = blocks.map {
-                                    if (it is VariableBlock && it.name == thenBlock.target) {
-                                        it.copy(value = result)
-                                    } else {
-                                        it
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        block.elseBlocks.forEach { elseBlock ->
-                            if (elseBlock is AssignmentBlock) {
-                                val result = evaluateExpression(elseBlock.expression, variablesMap)
-                                blocks = blocks.map {
-                                    if (it is VariableBlock && it.name == elseBlock.target) {
-                                        it.copy(value = result)
-                                    } else {
-                                        it
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    val updated = evaluateBlock(block, variablesMap)
+                    blocks = blocks.map { if (it.id == updated.id) updated else it }
                 }
             }
         }
-        coroutineScope.launch {
+                coroutineScope.launch {
             snackbarHostState.showSnackbar("All blocks evaluated successfully")
         }
     }
@@ -111,6 +83,9 @@ fun MainScreen() {
                 onAddIfElse = {
                     blocks = blocks + IfElseBlock(id = nextId++)
                 },
+                onAddAssignment = { target, expression ->
+                    blocks = blocks + AssignmentBlock(id = nextId++, target = target, expression = expression)
+                },
                 onEvaluateAll = { evaluateAllBlocks() }
             )
         },
@@ -122,7 +97,7 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Grid background
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,7 +105,6 @@ fun MainScreen() {
                     .drawGrid()
             )
 
-            // Workspace content
             Surface(
                 modifier = Modifier
                     .fillMaxSize()

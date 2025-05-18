@@ -27,21 +27,9 @@ fun AssignmentBlockView(
     var target by remember { mutableStateOf(block.target) }
     var expr by remember { mutableStateOf(block.expression) }
 
-    var offsetX by remember { mutableStateOf(0f) }
-    var offsetY by remember { mutableStateOf(0f) }
-
-    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
-    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
-
     Box(
         modifier = modifier
-            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    offsetX += dragAmount.x
-                    offsetY += dragAmount.y
-                }
-            }
+
     ) {
         Card(
             modifier = Modifier

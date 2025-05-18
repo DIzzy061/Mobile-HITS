@@ -1,7 +1,6 @@
 package com.example.codeblockhits.compose
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +20,7 @@ import com.example.codeblockhits.R
 fun TopMenuPanel(
     onAddVariable: (String) -> Unit,
     onAddIfElse: () -> Unit,
+    onAddAssignment: (String, String) -> Unit,
     onEvaluateAll: () -> Unit
 ) {
     var SelectBlock = stringResource(R.string.Select_Block)
@@ -30,7 +30,6 @@ fun TopMenuPanel(
     var variableLabel = stringResource(R.string.Variable)
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Title bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.primary,
@@ -47,7 +46,6 @@ fun TopMenuPanel(
             )
         }
 
-        // Control panel
         Surface(
             modifier = Modifier.fillMaxWidth(),
             tonalElevation = 2.dp,
@@ -97,7 +95,6 @@ fun TopMenuPanel(
             }
         }
 
-        // Dropdown panel
         AnimatedVisibility(visible = expanded) {
             Card(
                 modifier = Modifier
@@ -116,9 +113,9 @@ fun TopMenuPanel(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -143,6 +140,17 @@ fun TopMenuPanel(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text("If/Else")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                selectedOption = "Assignment"
+                                expanded = false
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Assignment")
                         }
                     }
                 }
@@ -177,7 +185,7 @@ fun TopMenuPanel(
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
-                    
+
                     Button(
                         onClick = {
                             if (inputText.isNotBlank()) {
@@ -214,6 +222,35 @@ fun TopMenuPanel(
                     Button(
                         onClick = {
                             onAddIfElse()
+                            selectedOption = SelectBlock
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(stringResource(R.string.Add_Block))
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = selectedOption == "Assignment") {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = {
+                            onAddAssignment("", "")
                             selectedOption = SelectBlock
                         },
                         shape = RoundedCornerShape(8.dp)

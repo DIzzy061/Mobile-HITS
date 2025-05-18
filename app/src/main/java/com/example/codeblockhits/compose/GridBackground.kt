@@ -14,7 +14,7 @@ fun Modifier.drawGrid(
     val width = size.width
     val height = size.height
 
-    // Draw vertical lines
+
     for (x in 0..width.toInt() step gridSpacing.toInt()) {
         drawLine(
             color = gridColor,
@@ -24,7 +24,7 @@ fun Modifier.drawGrid(
         )
     }
 
-    // Draw horizontal lines
+
     for (y in 0..height.toInt() step gridSpacing.toInt()) {
         drawLine(
             color = gridColor,

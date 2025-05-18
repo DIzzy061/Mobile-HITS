@@ -28,11 +28,6 @@ fun VariableBlockView(
     onRemove: () -> Unit,
     variablesMap: Map<String, String>
 ) {
-    var offsetX by remember { mutableStateOf(0f) }
-    var offsetY by remember { mutableStateOf(0f) }
-
-    val animatedX by animateFloatAsState(targetValue = offsetX, label = "")
-    val animatedY by animateFloatAsState(targetValue = offsetY, label = "")
 
     val computedValue = remember(block.value, variablesMap) {
         evaluateExpression(block.value, variablesMap)
@@ -40,13 +35,6 @@ fun VariableBlockView(
 
     Box(
         modifier = modifier
-            .offset { IntOffset(animatedX.roundToInt(), animatedY.roundToInt()) }
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    offsetX += dragAmount.x
-                    offsetY += dragAmount.y
-                }
-            }
     ) {
         Card(
             modifier = Modifier

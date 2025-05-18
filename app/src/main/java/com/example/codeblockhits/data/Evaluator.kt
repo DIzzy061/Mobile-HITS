@@ -90,7 +90,6 @@ fun evaluateMathExpression(expression: String): Double {
                 when {
                     eat('+') -> x += parseTerm()
                     eat('-') -> x -= parseTerm()
-                    eat('%') -> x %= parseFactor()
                     else -> return x
                 }
             }
@@ -102,6 +101,7 @@ fun evaluateMathExpression(expression: String): Double {
                 when {
                     eat('*') -> x *= parseFactor()
                     eat('/') -> x /= parseFactor()
+                    eat('%') -> x %= parseFactor()
                     else -> return x
                 }
             }
