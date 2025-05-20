@@ -24,6 +24,7 @@ fun MainScreen() {
     val coroutineScope = rememberCoroutineScope()
     var showOutputDialog by remember { mutableStateOf(false) }
     var programOutput by remember { mutableStateOf<List<String>>(emptyList()) }
+    var erroredBlockId by remember { mutableStateOf<Int?>(null) }
 
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
@@ -37,11 +38,17 @@ fun MainScreen() {
     }
 
     fun evaluateAllBlocks() {
-        val result = interpretBlocksRPN(blocks)
+        erroredBlockId = null
+        val result = interpretBlocksRPN(blocks.toMutableList(), startBlockId = blocks.firstOrNull()?.id, variables = mutableMapOf())
         programOutput = result.output
+        erroredBlockId = result.errorBlockId
         showOutputDialog = true
         coroutineScope.launch {
-            snackbarHostState.showSnackbar("All blocks evaluated (RPN)")
+            if (result.errorBlockId != null) {
+                snackbarHostState.showSnackbar("Error during evaluation. Check highlighted block and output.")
+            } else {
+                snackbarHostState.showSnackbar("All blocks evaluated successfully (RPN)")
+            }
         }
     }
 
@@ -130,6 +137,7 @@ fun MainScreen() {
                 ) {
                     CodeBlocksList(
                         blocks = blocks,
+                        erroredBlockId = erroredBlockId,
                         onRemove = { id ->
                             blocks = blocks.filter { it.id != id }
                         },

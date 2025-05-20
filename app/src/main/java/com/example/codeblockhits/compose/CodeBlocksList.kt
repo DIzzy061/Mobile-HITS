@@ -28,10 +28,13 @@ import kotlin.math.atan2
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun CodeBlocksList(
     blocks: List<CodeBlock>,
+    erroredBlockId: Int?,
     onRemove: (Int) -> Unit,
     onUpdate: (CodeBlock) -> Unit,
     onAddToIfElse: (Int, CodeBlock, Boolean) -> Unit,
@@ -48,6 +51,7 @@ fun CodeBlocksList(
     var draggingBlockId by remember { mutableStateOf<Int?>(null) }
     val isDarkTheme = isSystemInDarkTheme()
     val arrowColor = if (isDarkTheme) Color.White else Color.Black
+    val errorHighlightColor = MaterialTheme.colorScheme.error
 
     Box(modifier = Modifier.fillMaxSize()) {
         blocks.forEach { block ->
@@ -93,9 +97,17 @@ fun CodeBlocksList(
                         blockSizes[block.id] = Size(size.width.toFloat(), size.height.toFloat())
                     }
                     .background(
-                        if (draggingBlockId == block.id) MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                        else if (isArrowMode && selectedSourceBlockId == block.id) Color.Yellow.copy(alpha = 0.3f)
-                        else Color.Transparent
+                        when {
+                            erroredBlockId == block.id -> errorHighlightColor.copy(alpha = 0.3f)
+                            draggingBlockId == block.id -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                            isArrowMode && selectedSourceBlockId == block.id -> Color.Yellow.copy(alpha = 0.3f)
+                            else -> Color.Transparent
+                        }
+                    )
+                    .border(
+                        width = if (erroredBlockId == block.id) 2.dp else 0.dp,
+                        color = if (erroredBlockId == block.id) errorHighlightColor else Color.Transparent,
+                        shape = RoundedCornerShape(4.dp)
                     )
                     .padding(8.dp)
                     .then(
