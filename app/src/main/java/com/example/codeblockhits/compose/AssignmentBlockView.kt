@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
 
+
 @Composable
 fun AssignmentBlockView(
     block: AssignmentBlock,

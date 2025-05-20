@@ -1,5 +1,10 @@
 package com.example.codeblockhits.data
 
+<<<<<<< Updated upstream
+=======
+
+import java.util.*
+>>>>>>> Stashed changes
 
 fun evaluateExpression(expression: String, variables: Map<String, String>): String {
     return try {

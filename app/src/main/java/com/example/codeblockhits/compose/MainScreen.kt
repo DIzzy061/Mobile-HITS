@@ -16,6 +16,7 @@ import com.example.codeblockhits.data.*
 import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
+
 @Composable
 fun MainScreen() {
     var blocks by remember { mutableStateOf<List<CodeBlock>>(emptyList()) }

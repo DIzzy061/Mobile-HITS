@@ -18,6 +18,7 @@ import com.example.codeblockhits.data.*
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
+
 @Composable
 fun CodeBlocksList(
     blocks: List<CodeBlock>,

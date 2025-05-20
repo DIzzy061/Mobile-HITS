@@ -20,6 +20,7 @@ import com.example.codeblockhits.data.VariableBlock
 import com.example.codeblockhits.data.evaluateExpression
 import kotlin.math.roundToInt
 
+
 @Composable
 fun VariableBlockView(
     block: VariableBlock,

@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+
 fun Modifier.drawGrid(
     gridColor: Color = Color.Gray.copy(alpha = 0.1f),
     gridSpacing: Float = 20.dp.value,

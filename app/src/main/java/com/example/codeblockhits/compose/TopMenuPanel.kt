@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 
+
 @Composable
 fun TopMenuPanel(
     onAddVariable: (String) -> Unit,
