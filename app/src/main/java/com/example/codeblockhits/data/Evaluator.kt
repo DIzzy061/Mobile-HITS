@@ -137,10 +137,10 @@ data class InterpreterResult(
 
 fun interpretBlocksRPN(
     blocks: List<CodeBlock>,
-    startBlockId: Int? = null
+    startBlockId: Int? = null,
+    variables: MutableMap<String, String> = mutableMapOf()
 ): InterpreterResult {
     val blockMap = blocks.associateBy { it.id }
-    val variables = mutableMapOf<String, String>()
     val output = mutableListOf<String>()
     val visited = mutableSetOf<Int>()
     var currentId = startBlockId ?: blocks.firstOrNull()?.id
@@ -173,7 +173,20 @@ fun interpretBlocksRPN(
                     else -> false
                 }
                 val branch = if (condition) block.thenBlocks else block.elseBlocks
-                val branchResult = interpretBlocksRPN(branch)
+
+                val linkedBranch = branch.mapIndexed { idx, b ->
+                    if (idx < branch.size - 1 && (b.nextBlockId == null || b.nextBlockId == 0)) {
+                        when (b) {
+                            is VariableBlock -> b.copy(nextBlockId = branch[idx + 1].id)
+                            is AssignmentBlock -> b.copy(nextBlockId = branch[idx + 1].id)
+                            is PrintBlock -> b.copy(nextBlockId = branch[idx + 1].id)
+                            is IfElseBlock -> b.copy(nextBlockId = branch[idx + 1].id)
+                            else -> b
+                        }
+                    } else b
+                }
+
+                val branchResult = interpretBlocksRPN(linkedBranch, variables = variables.toMutableMap())
                 output.addAll(branchResult.output)
                 variables.putAll(branchResult.variables)
             }
