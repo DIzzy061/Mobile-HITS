@@ -16,16 +16,20 @@ import com.example.codeblockhits.data.*
 import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
-
 @Composable
 fun MainScreen() {
     var blocks by remember { mutableStateOf<List<CodeBlock>>(emptyList()) }
     var nextId by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    var showOutputDialog by remember { mutableStateOf(false) }
+    var programOutput by remember { mutableStateOf<List<String>>(emptyList()) }
 
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+
+    var isArrowMode by remember { mutableStateOf(false) }
+    var selectedSourceBlockId by remember { mutableStateOf<Int?>(null) }
 
     fun getVariablesMap(): Map<String, String> {
         return blocks.filterIsInstance<VariableBlock>()
@@ -33,38 +37,31 @@ fun MainScreen() {
     }
 
     fun evaluateAllBlocks() {
-        val variablesMap = getVariablesMap()
-        blocks.forEach { block ->
-            when (block) {
-                is VariableBlock -> {
-                    val result = evaluateExpression(block.value, variablesMap)
-                    if (result != block.value) {
-                        blocks = blocks.map {
-                            if (it.id == block.id) block.copy(value = result)
-                            else it
-                        }
-                    }
-                }
-
-                is AssignmentBlock -> {
-                    val result = evaluateExpression(block.expression, variablesMap)
-                    blocks = blocks.map {
-                        if (it is VariableBlock && it.name == block.target) {
-                            it.copy(value = result)
-                        } else {
-                            it
-                        }
-                    }
-                }
-
-                is IfElseBlock -> {
-                    val updated = evaluateBlock(block, variablesMap)
-                    blocks = blocks.map { if (it.id == updated.id) updated else it }
-                }
-            }
+        val result = interpretBlocksRPN(blocks)
+        programOutput = result.output
+        showOutputDialog = true
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar("All blocks evaluated (RPN)")
         }
-                coroutineScope.launch {
-            snackbarHostState.showSnackbar("All blocks evaluated successfully")
+    }
+
+    fun onBlockClickedForArrow(blockId: Int) {
+        if (!isArrowMode) return
+        if (selectedSourceBlockId == null) {
+            selectedSourceBlockId = blockId
+        } else if (selectedSourceBlockId != blockId) {
+            blocks = blocks.map {
+                if (it.id == selectedSourceBlockId) {
+                    when (it) {
+                        is VariableBlock -> it.copy(nextBlockId = blockId)
+                        is AssignmentBlock -> it.copy(nextBlockId = blockId)
+                        is IfElseBlock -> it.copy(nextBlockId = blockId)
+                        is PrintBlock -> it.copy(nextBlockId = blockId)
+                    }
+                } else it
+            }
+            selectedSourceBlockId = null
+            isArrowMode = false
         }
     }
 
@@ -87,7 +84,11 @@ fun MainScreen() {
                 onAddAssignment = { target, expression ->
                     blocks = blocks + AssignmentBlock(id = nextId++, target = target, expression = expression)
                 },
-                onEvaluateAll = { evaluateAllBlocks() }
+                onAddPrint = {
+                    blocks = blocks + PrintBlock(id = nextId++)
+                },
+                onEvaluateAll = { evaluateAllBlocks() },
+                onArrowMode = { isArrowMode = true; selectedSourceBlockId = null }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -150,10 +151,20 @@ fun MainScreen() {
                         },
                         variablesMap = getVariablesMap(),
                         nextId = nextId,
-                        onIdIncrement = { nextId++ }
+                        onIdIncrement = { nextId++ },
+                        isArrowMode = isArrowMode,
+                        selectedSourceBlockId = selectedSourceBlockId,
+                        onBlockClickedForArrow = ::onBlockClickedForArrow
                     )
                 }
             }
         }
+    }
+
+    if (showOutputDialog) {
+        OutputDialog(
+            output = programOutput,
+            onDismiss = { showOutputDialog = false }
+        )
     }
 }

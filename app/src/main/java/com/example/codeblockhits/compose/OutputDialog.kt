@@ -11,7 +11,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
-
 @Composable
 fun OutputDialog(
     output: List<String>,
@@ -34,9 +33,9 @@ fun OutputDialog(
                     text = "Program Output",
                     style = MaterialTheme.typography.titleLarge
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -59,9 +58,9 @@ fun OutputDialog(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.End)

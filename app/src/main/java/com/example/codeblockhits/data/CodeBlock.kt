@@ -1,6 +1,5 @@
 package com.example.codeblockhits.data
 
-
 sealed interface CodeBlock {
     val id: Int
     var nextBlockId: Int?
@@ -28,3 +27,12 @@ data class IfElseBlock(
     val elseBlocks: List<CodeBlock> = emptyList(),
     override var nextBlockId: Int? = null
 ) : CodeBlock
+
+data class PrintBlock(
+    override val id: Int,
+    val expressions: List<String> = listOf(""),
+    override var nextBlockId: Int? = null
+) : CodeBlock {
+    val expression: String
+        get() = expressions.joinToString(", ")
+}

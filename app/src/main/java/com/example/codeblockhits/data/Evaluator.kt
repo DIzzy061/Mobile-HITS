@@ -1,10 +1,5 @@
 package com.example.codeblockhits.data
 
-<<<<<<< Updated upstream
-=======
-
-import java.util.*
->>>>>>> Stashed changes
 
 fun evaluateExpression(expression: String, variables: Map<String, String>): String {
     return try {
@@ -134,5 +129,96 @@ fun evaluateMathExpression(expression: String): Double {
         }
     }.parse()
 }
+
+data class InterpreterResult(
+    val output: List<String>,
+    val variables: Map<String, String>
+)
+
+fun interpretBlocksRPN(
+    blocks: List<CodeBlock>,
+    startBlockId: Int? = null
+): InterpreterResult {
+    val blockMap = blocks.associateBy { it.id }
+    val variables = mutableMapOf<String, String>()
+    val output = mutableListOf<String>()
+    val visited = mutableSetOf<Int>()
+    var currentId = startBlockId ?: blocks.firstOrNull()?.id
+    while (currentId != null && currentId !in visited) {
+        visited.add(currentId)
+        val block = blockMap[currentId] ?: break
+        when (block) {
+            is VariableBlock -> {
+                val value = evalRpn(block.value, variables)
+                variables[block.name] = value
+            }
+            is AssignmentBlock -> {
+                val value = evalRpn(block.expression, variables)
+                variables[block.target] = value
+            }
+            is PrintBlock -> {
+                val results = block.expressions.map { evalRpn(it, variables) }
+                output.add(results.joinToString(", "))
+            }
+            is IfElseBlock -> {
+                val left = evalRpn(block.leftOperand, variables).toDoubleOrNull()
+                val right = evalRpn(block.rightOperand, variables).toDoubleOrNull()
+                val condition = when (block.operator) {
+                    "==" -> left == right
+                    "!=" -> left != right
+                    ">" -> left != null && right != null && left > right
+                    "<" -> left != null && right != null && left < right
+                    ">=" -> left != null && right != null && left >= right
+                    "<=" -> left != null && right != null && left <= right
+                    else -> false
+                }
+                val branch = if (condition) block.thenBlocks else block.elseBlocks
+                val branchResult = interpretBlocksRPN(branch)
+                output.addAll(branchResult.output)
+                variables.putAll(branchResult.variables)
+            }
+        }
+        currentId = when (block) {
+            is VariableBlock -> block.nextBlockId
+            is AssignmentBlock -> block.nextBlockId
+            is IfElseBlock -> block.nextBlockId
+            is PrintBlock -> block.nextBlockId
+        }
+    }
+    return InterpreterResult(output, variables)
+}
+
+fun evalRpn(expr: String, variables: Map<String, String>): String {
+    val tokens = expr.trim().split(" ").filter { it.isNotEmpty() }
+    if (tokens.isEmpty()) return ""
+    val stack = ArrayDeque<Double>()
+    for (token in tokens) {
+        when {
+            token.toDoubleOrNull() != null -> stack.addLast(token.toDouble())
+            variables.containsKey(token) -> stack.addLast(variables[token]?.toDoubleOrNull() ?: 0.0)
+            token in setOf("+", "-", "*", "/", "%", "^") -> {
+                if (stack.isEmpty()) return "Error"
+                val b = stack.removeLast()
+                if (stack.isEmpty()) return "Error"
+                val a = stack.removeLast()
+                val res = when (token) {
+                    "+" -> a + b
+                    "-" -> a - b
+                    "*" -> a * b
+                    "/" -> a / b
+                    "%" -> a % b
+                    "^" -> Math.pow(a, b)
+                    else -> return "Error"
+                }
+                stack.addLast(res)
+            }
+            else -> return "Error"
+        }
+    }
+    return if (stack.size == 1) stack.last().toString() else "Error"
+}
+
+
+
 
 

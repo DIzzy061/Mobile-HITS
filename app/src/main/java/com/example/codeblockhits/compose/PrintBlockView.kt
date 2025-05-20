@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.PrintBlock
 import com.example.codeblockhits.data.evaluateExpression
 
-
 @Composable
 fun PrintBlockView(
     block: PrintBlock,

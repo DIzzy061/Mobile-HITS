@@ -19,7 +19,6 @@ import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
 
-
 @Composable
 fun IfElseBlockView(
     block: IfElseBlock,
@@ -51,11 +50,11 @@ fun IfElseBlockView(
             onDismissRequest = { showErrorDialog = false },
             confirmButton = {
                 Button(onClick = { showErrorDialog = false }) {
-                    Text(stringResource(R.string.OK))
+                    Text("OK")
                 }
             },
-            title = { Text(stringResource(R.string.Error)) },
-            text = { Text(stringResource(R.string.This_Block_Has_Variable_Whith_This_Name)) }
+            title = { Text("Error") },
+            text = { Text("This block already has a variable with this name") }
         )
     }
 
@@ -80,7 +79,7 @@ fun IfElseBlockView(
                         newVarName = ""
                     }
                 }) {
-                    Text(stringResource(R.string.Add_Block))
+                    Text("Add Block")
                 }
             },
             dismissButton = {
@@ -88,15 +87,15 @@ fun IfElseBlockView(
                     showDialog = false
                     newVarName = ""
                 }) {
-                    Text(stringResource(R.string.Cansel))
+                    Text("Cancel")
                 }
             },
-            title = { Text(stringResource(R.string.Variable_Name))},
+            title = { Text("Variable Name")},
             text = {
                 OutlinedTextField(
                     value = newVarName,
                     onValueChange = { newVarName = it },
-                    label = { Text(stringResource(R.string.Variable_Name)) }
+                    label = { Text("Variable Name") }
                 )
             }
         )
@@ -140,7 +139,7 @@ fun IfElseBlockView(
                             leftOperand = it
                             onUpdate(block.copy(leftOperand = it, operator = operator, rightOperand = rightOperand))
                         },
-                        label = { Text(stringResource(R.string.Left_Operand)) },
+                        label = { Text("Left Operand") },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -175,14 +174,14 @@ fun IfElseBlockView(
                             rightOperand = it
                             onUpdate(block.copy(leftOperand = leftOperand, operator = operator, rightOperand = it))
                         },
-                        label = { Text(stringResource(R.string.Right_Operand)) },
+                        label = { Text("Right Operand") },
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Then блоки (${block.thenBlocks.size})", color = Color.Green)
+                Text("Then blocks (${block.thenBlocks.size})", color = Color.Green)
                 Column {
                     block.thenBlocks.forEach { childBlock ->
                         when (childBlock) {
@@ -232,25 +231,45 @@ fun IfElseBlockView(
                                 },
                                 variablesMap = variablesMap
                             )
+                            is PrintBlock -> PrintBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val newThenBlocks = block.thenBlocks.map {
+                                        if (it.id == updatedChild.id) updatedChild else it
+                                    }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                onRemove = {
+                                    val newThenBlocks = block.thenBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(thenBlocks = newThenBlocks))
+                                },
+                                variablesMap = variablesMap
+                            )
                         }
                     }
                     Button(onClick = {
                         dialogTargetThen = true
                         showDialog = true
                     }, modifier = Modifier.padding(top = 8.dp)) {
-                        Text(stringResource(R.string.Add_Block_To_Then))
+                        Text("Add Block to Then")
                     }
                     Button(onClick = {
                         onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), true)
                         onIdIncrement()
                     }, modifier = Modifier.padding(top = 4.dp)) {
-                        Text(stringResource(R.string.Add_Assignment_To_Then))
+                        Text("Add Assignment to Then")
+                    }
+                    Button(onClick = {
+                        onAddToIfElse(block.id, PrintBlock(id = nextId), true)
+                        onIdIncrement()
+                    }, modifier = Modifier.padding(top = 4.dp)) {
+                        Text("Add Print Block to Then")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text("Else блоки (${block.elseBlocks.size})", color = Color.Red)
+                Text("Else blocks (${block.elseBlocks.size})", color = Color.Red)
                 Column {
                     block.elseBlocks.forEach { childBlock ->
                         when (childBlock) {
@@ -300,19 +319,39 @@ fun IfElseBlockView(
                                 },
                                 variablesMap = variablesMap
                             )
+                            is PrintBlock -> PrintBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val newElseBlocks = block.elseBlocks.map {
+                                        if (it.id == updatedChild.id) updatedChild else it
+                                    }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                onRemove = {
+                                    val newElseBlocks = block.elseBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(elseBlocks = newElseBlocks))
+                                },
+                                variablesMap = variablesMap
+                            )
                         }
                     }
                     Button(onClick = {
                         dialogTargetThen = false
                         showDialog = true
                     }, modifier = Modifier.padding(top = 8.dp)) {
-                        Text(stringResource(R.string.Add_Block_To_Else))
+                        Text("Add Block to Else")
                     }
                     Button(onClick = {
                         onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), false)
                         onIdIncrement()
                     }, modifier = Modifier.padding(top = 4.dp)) {
-                        Text(stringResource(R.string.Add_Assignment_To_Else))
+                        Text("Add Assignment to Else")
+                    }
+                    Button(onClick = {
+                        onAddToIfElse(block.id, PrintBlock(id = nextId), false)
+                        onIdIncrement()
+                    }, modifier = Modifier.padding(top = 4.dp)) {
+                        Text("Add Print Block to Else")
                     }
                 }
             }

@@ -20,7 +20,6 @@ import com.example.codeblockhits.data.VariableBlock
 import com.example.codeblockhits.data.evaluateExpression
 import kotlin.math.roundToInt
 
-
 @Composable
 fun VariableBlockView(
     block: VariableBlock,
@@ -64,7 +63,7 @@ fun VariableBlockView(
                     IconButton(onClick = onRemove) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Удалить",
+                            contentDescription = "Delete",
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -75,7 +74,7 @@ fun VariableBlockView(
                 OutlinedTextField(
                     value = block.value,
                     onValueChange = onValueChange,
-                    label = { Text(stringResource(R.string.Variable_Meaning)) },
+                    label = { Text("Variable Value") },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyMedium,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -97,7 +96,7 @@ fun VariableBlockView(
                     onClick = { onValueChange(computedValue) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.Calculate_Variable_Meaning_Now))
+                    Text("Calculate now")
                 }
             }
         }

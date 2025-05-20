@@ -2,11 +2,13 @@ package com.example.codeblockhits.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -17,7 +19,15 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.*
 import kotlin.math.hypot
 import kotlin.math.roundToInt
-
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.foundation.isSystemInDarkTheme
+import kotlin.math.atan2
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun CodeBlocksList(
@@ -27,13 +37,33 @@ fun CodeBlocksList(
     onAddToIfElse: (Int, CodeBlock, Boolean) -> Unit,
     variablesMap: Map<String, String>,
     nextId: Int,
-    onIdIncrement: () -> Unit
+    onIdIncrement: () -> Unit,
+    isArrowMode: Boolean = false,
+    selectedSourceBlockId: Int? = null,
+    onBlockClickedForArrow: (Int) -> Unit = {}
 ) {
     val blockOffsets = remember { mutableStateMapOf<Int, Offset>() }
     val blockCenters = remember { mutableStateMapOf<Int, Offset>() }
+    val blockSizes = remember { mutableStateMapOf<Int, Size>() }
     var draggingBlockId by remember { mutableStateOf<Int?>(null) }
+    val isDarkTheme = isSystemInDarkTheme()
+    val arrowColor = if (isDarkTheme) Color.White else Color.Black
 
     Box(modifier = Modifier.fillMaxSize()) {
+        blocks.forEach { block ->
+            val fromCenter = blockCenters[block.id]
+            val toId = when (block) {
+                is VariableBlock -> block.nextBlockId
+                is AssignmentBlock -> block.nextBlockId
+                is IfElseBlock -> block.nextBlockId
+                is PrintBlock -> block.nextBlockId
+            }
+            val toCenter = toId?.let { blockCenters[it] }
+            if (fromCenter != null && toCenter != null) {
+                ArrowLineThemeAware(from = fromCenter, to = toCenter, color = arrowColor)
+            }
+        }
+
         blocks.forEachIndexed { index, block ->
             val offset = blockOffsets.getOrPut(block.id) {
                 Offset(100f, 100f + index * 200f)
@@ -48,18 +78,6 @@ fun CodeBlocksList(
                                 draggingBlockId = block.id
                             },
                             onDragEnd = {
-                                val thisCenter = blockCenters[block.id] ?: return@detectDragGestures
-                                val nearby = blockCenters.entries
-                                    .firstOrNull { it.key != block.id && distance(thisCenter, it.value) < 80f }
-
-                                if (nearby != null) {
-                                    val updated = when (block) {
-                                        is VariableBlock -> block.copy(nextBlockId = nearby.key)
-                                        is AssignmentBlock -> block.copy(nextBlockId = nearby.key)
-                                        is IfElseBlock -> block.copy(nextBlockId = nearby.key)
-                                    }
-                                    onUpdate(updated)
-                                }
                                 draggingBlockId = null
                             },
                             onDrag = { _, dragAmount ->
@@ -72,12 +90,21 @@ fun CodeBlocksList(
                         val size = layoutCoordinates.size
                         val position = layoutCoordinates.positionInRoot()
                         blockCenters[block.id] = position + Offset(size.width / 2f, size.height / 2f)
+                        blockSizes[block.id] = Size(size.width.toFloat(), size.height.toFloat())
                     }
                     .background(
                         if (draggingBlockId == block.id) MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                        else if (isArrowMode && selectedSourceBlockId == block.id) Color.Yellow.copy(alpha = 0.3f)
                         else Color.Transparent
                     )
                     .padding(8.dp)
+                    .then(
+                        if (isArrowMode) Modifier.pointerInput(block.id) {
+                            detectTapGestures {
+                                onBlockClickedForArrow(block.id)
+                            }
+                        } else Modifier
+                    )
             ) {
                 when (block) {
                     is VariableBlock -> VariableBlockView(
@@ -103,6 +130,13 @@ fun CodeBlocksList(
                         onRemove = { onRemove(block.id) },
                         variablesMap = variablesMap
                     )
+
+                    is PrintBlock -> PrintBlockView(
+                        block = block,
+                        onUpdate = { updated -> onUpdate(updated) },
+                        onRemove = { onRemove(block.id) },
+                        variablesMap = variablesMap
+                    )
                 }
             }
         }
@@ -111,4 +145,36 @@ fun CodeBlocksList(
 
 private fun distance(a: Offset, b: Offset): Float {
     return hypot(a.x - b.x, a.y - b.y)
+}
+
+@Composable
+fun ArrowLineThemeAware(from: Offset, to: Offset, color: Color) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawLine(
+            color = color,
+            start = from,
+            end = to,
+            strokeWidth = 3f,
+            cap = StrokeCap.Round,
+            alpha = 0.9f
+        )
+        val arrowHeadLength = 18f
+        val arrowHeadAngle = 28f
+        val angle = atan2(to.y - from.y, to.x - from.x) * 180f / PI
+        rotate(angle.toFloat(), pivot = to) {
+            val path = Path().apply {
+                moveTo(to.x, to.y)
+                lineTo(
+                    to.x - arrowHeadLength * cos(Math.toRadians(arrowHeadAngle.toDouble())).toFloat(),
+                    to.y - arrowHeadLength * sin(Math.toRadians(arrowHeadAngle.toDouble())).toFloat()
+                )
+                lineTo(
+                    to.x - arrowHeadLength * cos(Math.toRadians(-arrowHeadAngle.toDouble())).toFloat(),
+                    to.y - arrowHeadLength * sin(Math.toRadians(-arrowHeadAngle.toDouble())).toFloat()
+                )
+                close()
+            }
+            drawPath(path, color = color, alpha = 0.9f)
+        }
+    }
 }
