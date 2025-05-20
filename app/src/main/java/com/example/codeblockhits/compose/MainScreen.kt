@@ -1,7 +1,8 @@
 package com.example.codeblockhits.compose
 
+import com.example.codeblockhits.data.VariableValue
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,10 +11,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.data.*
-import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -32,23 +30,32 @@ fun MainScreen() {
     var isArrowMode by remember { mutableStateOf(false) }
     var selectedSourceBlockId by remember { mutableStateOf<Int?>(null) }
 
-    fun getVariablesMap(): Map<String, String> {
-        return blocks.filterIsInstance<VariableBlock>()
-            .associate { it.name to it.value }
+    fun getVariablesMap(): Map<String, VariableValue> {
+        return buildMap {
+            blocks.filterIsInstance<VariableBlock>()
+                .forEach { put(it.name, VariableValue.Scalar(it.value)) }
+            blocks.filterIsInstance<ArrayBlock>()
+                .forEach { put(it.name, VariableValue.Array(it.values.toMutableList())) }
+        }
     }
 
     fun evaluateAllBlocks() {
         erroredBlockId = null
-        val result = interpretBlocksRPN(blocks.toMutableList(), startBlockId = blocks.firstOrNull()?.id, variables = mutableMapOf())
+        val result = interpretBlocksRPN(
+            blocks = blocks.toMutableList(),
+            startBlockId = blocks.firstOrNull()?.id,
+            variables = getVariablesMap().toMutableMap() // ✅
+        )
         programOutput = result.output
         erroredBlockId = result.errorBlockId
         showOutputDialog = true
         coroutineScope.launch {
-            if (result.errorBlockId != null) {
-                snackbarHostState.showSnackbar("Error during evaluation. Check highlighted block and output.")
+            val msg = if (result.errorBlockId != null) {
+                "Error during evaluation. Check highlighted block and output."
             } else {
-                snackbarHostState.showSnackbar("All blocks evaluated successfully (RPN)")
+                "All blocks evaluated successfully (RPN)"
             }
+            snackbarHostState.showSnackbar(msg)
         }
     }
 
@@ -64,6 +71,7 @@ fun MainScreen() {
                         is AssignmentBlock -> it.copy(nextBlockId = blockId)
                         is IfElseBlock -> it.copy(nextBlockId = blockId)
                         is PrintBlock -> it.copy(nextBlockId = blockId)
+                        is ArrayBlock -> it.copy(nextBlockId = blockId)
                     }
                 } else it
             }
@@ -75,17 +83,41 @@ fun MainScreen() {
     Scaffold(
         topBar = {
             TopMenuPanel(
-                onAddVariable = { name ->
-                    val variableNames = blocks.filterIsInstance<VariableBlock>().map { it.name }
-                    if (variableNames.contains(name)) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Variable '$name' already exists")
+                onAddVariable = { input ->
+                    val parts = input.split(":")
+                    val allNames = blocks.mapNotNull {
+                        when (it) {
+                            is VariableBlock -> it.name
+                            is ArrayBlock -> it.name
+                            else -> null
+                        }
+                    }
+
+                    if (parts.size == 2) {
+                        val arrayName = parts[0]
+                        val size = parts[1].toIntOrNull()
+
+                        if (size != null && arrayName !in allNames) {
+                            blocks = blocks + ArrayBlock(id = nextId++, name = arrayName, size = size)
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Имя '$arrayName' уже используется")
+                            }
                         }
                     } else {
-                        blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
+                        val name = input.trim()
+                        if (name.isNotBlank() && name !in allNames) {
+                            blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Имя '$name' уже используется")
+                            }
+
+                        }
                     }
                 },
-                onAddIfElse = {
+
+                        onAddIfElse = {
                     blocks = blocks + IfElseBlock(id = nextId++)
                 },
                 onAddAssignment = { target, expression ->
@@ -95,7 +127,10 @@ fun MainScreen() {
                     blocks = blocks + PrintBlock(id = nextId++)
                 },
                 onEvaluateAll = { evaluateAllBlocks() },
-                onArrowMode = { isArrowMode = true; selectedSourceBlockId = null }
+                onArrowMode = {
+                    isArrowMode = true
+                    selectedSourceBlockId = null
+                }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -106,7 +141,6 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -138,12 +172,8 @@ fun MainScreen() {
                     CodeBlocksList(
                         blocks = blocks,
                         erroredBlockId = erroredBlockId,
-                        onRemove = { id ->
-                            blocks = blocks.filter { it.id != id }
-                        },
-                        onUpdate = { updated ->
-                            blocks = blocks.map { if (it.id == updated.id) updated else it }
-                        },
+                        onRemove = { id -> blocks = blocks.filter { it.id != id } },
+                        onUpdate = { updated -> blocks = blocks.map { if (it.id == updated.id) updated else it } },
                         onAddToIfElse = { parentId, block, isThenBlock ->
                             blocks = blocks.map {
                                 if (it.id == parentId && it is IfElseBlock) {
@@ -152,9 +182,7 @@ fun MainScreen() {
                                     } else {
                                         it.copy(elseBlocks = it.elseBlocks + block)
                                     }
-                                } else {
-                                    it
-                                }
+                                } else it
                             }
                         },
                         variablesMap = getVariablesMap(),

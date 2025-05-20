@@ -1,5 +1,6 @@
 package com.example.codeblockhits.compose
 
+import com.example.codeblockhits.data.VariableValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -38,7 +39,7 @@ fun CodeBlocksList(
     onRemove: (Int) -> Unit,
     onUpdate: (CodeBlock) -> Unit,
     onAddToIfElse: (Int, CodeBlock, Boolean) -> Unit,
-    variablesMap: Map<String, String>,
+    variablesMap: Map<String, VariableValue>,
     nextId: Int,
     onIdIncrement: () -> Unit,
     isArrowMode: Boolean = false,
@@ -60,6 +61,7 @@ fun CodeBlocksList(
                 is VariableBlock -> block.nextBlockId
                 is AssignmentBlock -> block.nextBlockId
                 is IfElseBlock -> block.nextBlockId
+                is ArrayBlock -> block.nextBlockId
                 is PrintBlock -> block.nextBlockId
             }
             val toCenter = toId?.let { blockCenters[it] }
@@ -142,8 +144,13 @@ fun CodeBlocksList(
                         onRemove = { onRemove(block.id) },
                         variablesMap = variablesMap
                     )
+                    is ArrayBlock -> ArrayBlockView(
+                        block = block,
+                        onUpdate = { updated -> onUpdate(updated) },
+                        onRemove = { onRemove(block.id) }
+                    )
 
-                    is PrintBlock -> PrintBlockView(
+                                is PrintBlock -> PrintBlockView(
                         block = block,
                         onUpdate = { updated -> onUpdate(updated) },
                         onRemove = { onRemove(block.id) },
@@ -153,10 +160,6 @@ fun CodeBlocksList(
             }
         }
     }
-}
-
-private fun distance(a: Offset, b: Offset): Float {
-    return hypot(a.x - b.x, a.y - b.y)
 }
 
 @Composable

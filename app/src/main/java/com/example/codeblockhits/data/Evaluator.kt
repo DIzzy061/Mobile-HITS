@@ -1,61 +1,32 @@
 package com.example.codeblockhits.data
 
-
-fun evaluateExpression(expression: String, variables: Map<String, String>): String {
-    return try {
-
-        var processedExpr = expression
-        variables.forEach { (name, value) ->
-            processedExpr = processedExpr.replace(name, value)
-        }
-
-
-        val result =evaluateMathExpression(processedExpr)
-        result.toString()
-    } catch (e: Exception) {
-        "Error: ${e.message}"
-    }
+sealed class VariableValue {
+    data class Scalar(val value: String) : VariableValue()
+    data class Array(val values: MutableList<String>) : VariableValue()
 }
 
-fun evaluateBlock(block: CodeBlock, variables: Map<String, String>): CodeBlock {
-    return when (block) {
-        is VariableBlock -> block.copy(value = evaluateExpression(block.value, variables))
-        is AssignmentBlock -> {
-            val evaluated = evaluateExpression(block.expression, variables)
-            AssignmentBlock(id = block.id, target = block.target, expression = evaluated)
+data class InterpreterResult(
+    val output: List<String>,
+    val variables: Map<String, VariableValue>,
+    val errorBlockId: Int? = null
+)
+
+data class RpnResult(val value: String, val isError: Boolean = false, val errorMessage: String = "")
+
+fun evaluateExpression(expression: String, variables: Map<String, VariableValue>): String {
+    var processedExpr = expression
+    variables.forEach { (name, value) ->
+        val replacement = when (value) {
+            is VariableValue.Scalar -> value.value
+            is VariableValue.Array -> value.values.joinToString(",")
         }
-        is IfElseBlock -> {
-            val left = evaluateExpression(block.leftOperand, variables).toDoubleOrNull()
-            val right = evaluateExpression(block.rightOperand, variables).toDoubleOrNull()
-            val condition = when (block.operator) {
-                "==" -> left == right
-                "!=" -> left != right
-                ">" -> left != null && right != null && left > right
-                "<" -> left != null && right != null && left < right
-                ">=" -> left != null && right != null && left >= right
-                "<=" -> left != null && right != null && left <= right
-                else -> false
-            }
+        processedExpr = processedExpr.replace(name, replacement)
+    }
 
-            val newThen = if (condition) {
-                block.thenBlocks.map {
-                    if (it is VariableBlock)
-                        it.copy(value = evaluateExpression(it.value, variables))
-                    else it
-                }
-            } else block.thenBlocks
-
-            val newElse = if (!condition) {
-                block.elseBlocks.map {
-                    if (it is VariableBlock)
-                        it.copy(value = evaluateExpression(it.value, variables))
-                    else it
-                }
-            } else block.elseBlocks
-
-            block.copy(thenBlocks = newThen, elseBlocks = newElse)
-        }
-        else -> block
+    return try {
+        evaluateMathExpression(processedExpr).toString()
+    } catch (e: Exception) {
+        "Error: ${e.message}"
     }
 }
 
@@ -63,11 +34,7 @@ fun evaluateMathExpression(expression: String): Double {
     return object : Any() {
         var pos = -1
         var ch = 0.toChar()
-
-        fun nextChar() {
-            ch = if (++pos < expression.length) expression[pos] else (-1).toChar()
-        }
-
+        fun nextChar() { ch = if (++pos < expression.length) expression[pos] else (-1).toChar() }
         fun eat(charToEat: Char): Boolean {
             while (ch == ' ') nextChar()
             if (ch == charToEat) {
@@ -76,14 +43,12 @@ fun evaluateMathExpression(expression: String): Double {
             }
             return false
         }
-
         fun parse(): Double {
             nextChar()
             val x = parseExpression()
-            if (pos < expression.length) throw RuntimeException("Невозможно " + ch)
+            if (pos < expression.length) throw RuntimeException("Unexpected: $ch")
             return x
         }
-
         fun parseExpression(): Double {
             var x = parseTerm()
             while (true) {
@@ -94,7 +59,6 @@ fun evaluateMathExpression(expression: String): Double {
                 }
             }
         }
-
         fun parseTerm(): Double {
             var x = parseFactor()
             while (true) {
@@ -106,11 +70,9 @@ fun evaluateMathExpression(expression: String): Double {
                 }
             }
         }
-
         fun parseFactor(): Double {
             if (eat('+')) return parseFactor()
             if (eat('-')) return -parseFactor()
-
             var x: Double
             val startPos = pos
             if (eat('(')) {
@@ -120,26 +82,86 @@ fun evaluateMathExpression(expression: String): Double {
                 while (ch in '0'..'9' || ch == '.') nextChar()
                 x = expression.substring(startPos, pos).toDouble()
             } else {
-                throw RuntimeException("Невозможно " + ch)
+                throw RuntimeException("Unexpected: $ch")
             }
-
             if (eat('^')) x = Math.pow(x, parseFactor())
-
             return x
         }
     }.parse()
 }
 
-data class InterpreterResult(
-    val output: List<String>,
-    val variables: Map<String, String>,
-    val errorBlockId: Int? = null
-)
+fun evalRpn(expr: String, variables: Map<String, VariableValue>): RpnResult {
+    val tokens = expr.trim().split(" ").filter { it.isNotEmpty() }
+    if (tokens.isEmpty()) return RpnResult("", isError = true, errorMessage = "Expression is empty")
+
+    val arrayAccessRegex = Regex("""([a-zA-Z_][a-zA-Z0-9_]*)\[(.+)]""")
+    val stack = ArrayDeque<Double>()
+
+    for (token in tokens) {
+        when {
+            token.toDoubleOrNull() != null -> stack.addLast(token.toDouble())
+
+            token in setOf("+", "-", "*", "/", "%", "^") -> {
+                if (stack.size < 2) return RpnResult("", true, "Not enough operands for operator '$token'")
+                val b = stack.removeLast()
+                val a = stack.removeLast()
+                val res = when (token) {
+                    "+" -> a + b
+                    "-" -> a - b
+                    "*" -> a * b
+                    "/" -> if (b == 0.0) return RpnResult("", true, "Division by zero") else a / b
+                    "%" -> if (b == 0.0) return RpnResult("", true, "Modulo by zero") else a % b
+                    "^" -> Math.pow(a, b)
+                    else -> return RpnResult("", true, "Unknown operator '$token'")
+                }
+                stack.addLast(res)
+            }
+
+            variables.containsKey(token) -> {
+                val variable = variables[token]
+                if (variable == null) {
+                    return RpnResult("", true, "Variable '$token' not initialized.")
+                }
+
+                when (variable) {
+                    is VariableValue.Scalar -> {
+                        val value = variable.value.toDoubleOrNull()
+                            ?: return RpnResult("", true, "Invalid number in scalar '$token'")
+                        stack.addLast(value)
+                    }
+                    is VariableValue.Array -> {
+                        return RpnResult("", true, "Use indexed access for array '$token', e.g. $token[0]")
+                    }
+                }
+            }
+
+            arrayAccessRegex.matches(token) -> {
+                val (name, indexExpr) = arrayAccessRegex.matchEntire(token)!!.destructured
+                val array = variables[name]
+                if (array !is VariableValue.Array) return RpnResult("", true, "'$name' is not an array")
+
+                val indexResult = evalRpn(indexExpr, variables)
+                if (indexResult.isError) return indexResult
+                val index = indexResult.value.toDoubleOrNull()?.toInt()
+                    ?: return RpnResult("", true, "Invalid index '$indexExpr'")
+                if (index !in array.values.indices) return RpnResult("", true, "Index $index out of bounds for '$name'")
+                val value = array.values[index].toDoubleOrNull()
+                    ?: return RpnResult("", true, "Array element '$name[$index]' is not a number")
+                stack.addLast(value)
+            }
+
+            else -> return RpnResult("", true, "Unknown token '$token'")
+        }
+    }
+
+    return if (stack.size == 1) RpnResult(stack.last().toString())
+    else RpnResult("", true, "Malformed RPN expression. Stack: $stack")
+}
 
 fun interpretBlocksRPN(
     blocks: List<CodeBlock>,
     startBlockId: Int? = null,
-    variables: MutableMap<String, String> = mutableMapOf()
+    variables: MutableMap<String, VariableValue> = mutableMapOf()
 ): InterpreterResult {
     val blockMap = blocks.associateBy { it.id }
     val output = mutableListOf<String>()
@@ -148,153 +170,75 @@ fun interpretBlocksRPN(
 
     while (currentId != null && currentId !in visited) {
         visited.add(currentId)
-        val block = blockMap[currentId] ?: run {
-            output.add("Error: Block with ID $currentId not found.")
-            return InterpreterResult(output, variables, currentId)
-        }
+        val block = blockMap[currentId] ?: return InterpreterResult(output.apply {
+            add("Error: Block with ID $currentId not found.")
+        }, variables, currentId)
 
         try {
             when (block) {
                 is VariableBlock -> {
                     val valueResult = evalRpn(block.value, variables)
-                    if (valueResult.isError) {
-                        output.add("Error in Variable '${block.name}': ${valueResult.errorMessage}")
-                        return InterpreterResult(output, variables, block.id)
-                    }
-                    variables[block.name] = valueResult.value
+                    if (valueResult.isError) return InterpreterResult(output + "Error in Variable '${block.name}': ${valueResult.errorMessage}", variables, block.id)
+                    variables[block.name] = VariableValue.Scalar(valueResult.value)
                 }
                 is AssignmentBlock -> {
                     val valueResult = evalRpn(block.expression, variables)
-                    if (valueResult.isError) {
-                        output.add("Error in Assignment to '${block.target}': ${valueResult.errorMessage}")
-                        return InterpreterResult(output, variables, block.id)
-                    }
-                    variables[block.target] = valueResult.value
+                    if (valueResult.isError) return InterpreterResult(output + "Error in Assignment to '${block.target}': ${valueResult.errorMessage}", variables, block.id)
+                    variables[block.target] = VariableValue.Scalar(valueResult.value)
+                }
+                is ArrayBlock -> {
+                    variables[block.name] = VariableValue.Array(block.values.toMutableList())
                 }
                 is PrintBlock -> {
-                    val results = mutableListOf<String>()
-                    for (expr in block.expressions) {
-                        val valueResult = evalRpn(expr, variables)
-                        if (valueResult.isError) {
-                            output.add("Error in Print expression '$expr': ${valueResult.errorMessage}")
-                            return InterpreterResult(output, variables, block.id)
-                        }
-                        results.add(valueResult.value)
+                    val result = block.expressions.map {
+                        val res = evalRpn(it, variables)
+                        if (res.isError) return InterpreterResult(output + "Error in Print '$it': ${res.errorMessage}", variables, block.id)
+                        res.value
                     }
-                    output.add(results.joinToString(", "))
+                    output.add(result.joinToString(", "))
                 }
                 is IfElseBlock -> {
-                    val leftResult = evalRpn(block.leftOperand, variables)
-                    if (leftResult.isError) {
-                        output.add("Error in If condition (left operand '${block.leftOperand}'): ${leftResult.errorMessage}")
-                        return InterpreterResult(output, variables, block.id)
-                    }
-                    val rightResult = evalRpn(block.rightOperand, variables)
-                    if (rightResult.isError) {
-                        output.add("Error in If condition (right operand '${block.rightOperand}'): ${rightResult.errorMessage}")
-                        return InterpreterResult(output, variables, block.id)
+                    val left = evalRpn(block.leftOperand, variables)
+                    val right = evalRpn(block.rightOperand, variables)
+                    if (left.isError || right.isError) {
+                        return InterpreterResult(output + "Error in If condition: ${left.errorMessage} ${right.errorMessage}".trim(), variables, block.id)
                     }
 
-                    val left = leftResult.value.toDoubleOrNull()
-                    val right = rightResult.value.toDoubleOrNull()
-
-                    if (left == null || right == null) {
-                         output.add("Error in If condition: Operands must be numbers. Got '${leftResult.value}' and '${rightResult.value}'")
-                         return InterpreterResult(output, variables, block.id)
+                    val l = left.value.toDoubleOrNull()
+                    val r = right.value.toDoubleOrNull()
+                    if (l == null || r == null) {
+                        return InterpreterResult(output + "Error in If condition: Operands must be numbers.", variables, block.id)
                     }
 
-                    val condition = when (block.operator) {
-                        "==" -> left == right
-                        "!=" -> left != right
-                        ">" -> left > right
-                        "<" -> left < right
-                        ">=" -> left >= right
-                        "<=" -> left <= right
-                        else -> {
-                            output.add("Error: Unknown operator '${block.operator}' in If condition.")
-                            return InterpreterResult(output, variables, block.id)
-                        }
+                    val result = when (block.operator) {
+                        "==" -> l == r
+                        "!=" -> l != r
+                        ">"  -> l > r
+                        "<"  -> l < r
+                        ">=" -> l >= r
+                        "<=" -> l <= r
+                        else -> false
                     }
-                    val branchToExecute = if (condition) block.thenBlocks else block.elseBlocks
 
-                    val linkedBranch = branchToExecute.mapIndexed { idx, b ->
-                        if (idx < branchToExecute.size - 1 && (b.nextBlockId == null || b.nextBlockId == 0)) {
-                            when (b) {
-                                is VariableBlock -> b.copy(nextBlockId = branchToExecute[idx + 1].id)
-                                is AssignmentBlock -> b.copy(nextBlockId = branchToExecute[idx + 1].id)
-                                is PrintBlock -> b.copy(nextBlockId = branchToExecute[idx + 1].id)
-                                is IfElseBlock -> b.copy(nextBlockId = branchToExecute[idx + 1].id)
-                                else -> b
-                            }
-                        } else b
-                    }
-                    
-                    val branchVariables = variables.toMutableMap()
-                    val branchResult = interpretBlocksRPN(linkedBranch, startBlockId = linkedBranch.firstOrNull()?.id, variables = branchVariables)
-                    
+                    val chosenBranch = if (result) block.thenBlocks else block.elseBlocks
+                    val branchResult = interpretBlocksRPN(chosenBranch, startBlockId = chosenBranch.firstOrNull()?.id, variables = variables.toMutableMap())
                     output.addAll(branchResult.output)
-                    
-                    if (branchResult.errorBlockId != null) {
-                        return InterpreterResult(output, branchResult.variables, branchResult.errorBlockId)
-                    }
+                    if (branchResult.errorBlockId != null) return branchResult
                     variables.putAll(branchResult.variables)
                 }
             }
         } catch (e: Exception) {
-            output.add("Runtime Error in block ID ${block.id} ('${block::class.simpleName}'): ${e.message}")
-            return InterpreterResult(output, variables, block.id)
+            return InterpreterResult(output + "Runtime error at block ${block.id}: ${e.message}", variables, block.id)
         }
 
         currentId = when (block) {
             is VariableBlock -> block.nextBlockId
             is AssignmentBlock -> block.nextBlockId
-            is IfElseBlock -> block.nextBlockId
             is PrintBlock -> block.nextBlockId
+            is IfElseBlock -> block.nextBlockId
+            is ArrayBlock -> block.nextBlockId
         }
     }
+
     return InterpreterResult(output, variables, null)
 }
-
-data class RpnResult(val value: String, val isError: Boolean = false, val errorMessage: String = "")
-
-fun evalRpn(expr: String, variables: Map<String, String>): RpnResult {
-    val tokens = expr.trim().split(" ").filter { it.isNotEmpty() }
-    if (tokens.isEmpty()) return RpnResult("", isError = true, errorMessage = "Expression is empty")
-
-    val stack = ArrayDeque<Double>()
-    for (token in tokens) {
-        when {
-            token.toDoubleOrNull() != null -> stack.addLast(token.toDouble())
-            variables.containsKey(token) -> {
-                val variableValueString = variables[token]
-                val variableValue = variableValueString?.toDoubleOrNull()
-                if (variableValue == null) {
-                    return RpnResult("", true, "Variable '$token' (value: '$variableValueString') is not a valid number or not initialized properly.")
-                }
-                stack.addLast(variableValue)
-            }
-            token in setOf("+", "-", "*", "/", "%", "^") -> {
-                if (stack.size < 2) return RpnResult("", true, "Not enough operands for operator '$token'. Current stack: $stack")
-                val b = stack.removeLast()
-                val a = stack.removeLast()
-                val res = when (token) {
-                    "+" -> a + b
-                    "-" -> a - b
-                    "*" -> a * b
-                    "/" -> if (b == 0.0) return RpnResult("", true, "Division by zero ('$a / $b')") else a / b
-                    "%" -> if (b == 0.0) return RpnResult("", true, "Modulo by zero ('$a % $b')") else a % b
-                    "^" -> Math.pow(a, b)
-                    else -> return RpnResult("", true, "Unknown operator '$token'")
-                }
-                stack.addLast(res)
-            }
-            else -> return RpnResult("", true, "Unknown token or uninitialized variable '$token' in expression.")
-        }
-    }
-    return if (stack.size == 1) RpnResult(stack.last().toString(), false) else RpnResult("", true, "Malformed expression. Check operators and operands. Final stack: $stack")
-}
-
-
-
-
-

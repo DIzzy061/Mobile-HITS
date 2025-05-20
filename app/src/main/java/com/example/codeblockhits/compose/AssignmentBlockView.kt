@@ -21,7 +21,7 @@ fun AssignmentBlockView(
     block: AssignmentBlock,
     onUpdate: (AssignmentBlock) -> Unit,
     onRemove: () -> Unit,
-    variablesMap: Map<String, String>,
+    variablesMap: Map<String, VariableValue>,
     modifier: Modifier = Modifier
 ) {
     var target by remember { mutableStateOf(block.target) }

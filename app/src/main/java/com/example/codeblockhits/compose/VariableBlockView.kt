@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 import com.example.codeblockhits.data.VariableBlock
+import com.example.codeblockhits.data.VariableValue
 import com.example.codeblockhits.data.evaluateExpression
 import kotlin.math.roundToInt
 
@@ -26,7 +27,7 @@ fun VariableBlockView(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
-    variablesMap: Map<String, String>
+    variablesMap: Map<String, VariableValue>
 ) {
 
     val computedValue = remember(block.value, variablesMap) {

@@ -36,3 +36,11 @@ data class PrintBlock(
     val expression: String
         get() = expressions.joinToString(", ")
 }
+
+data class ArrayBlock(
+    override val id: Int,
+    val name: String,
+    val size: Int,
+    val values: MutableList<String> = MutableList(size) { "0" },
+    override var nextBlockId: Int? = null
+) : CodeBlock

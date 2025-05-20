@@ -1,5 +1,5 @@
 package com.example.codeblockhits.compose
-
+import com.example.codeblockhits.data.VariableValue
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,7 +18,7 @@ fun PrintBlockView(
     block: PrintBlock,
     onUpdate: (PrintBlock) -> Unit,
     onRemove: () -> Unit,
-    variablesMap: Map<String, String>,
+    variablesMap: Map<String, VariableValue>,
     modifier: Modifier = Modifier
 ) {
     var expressions by remember { mutableStateOf(block.expressions) }

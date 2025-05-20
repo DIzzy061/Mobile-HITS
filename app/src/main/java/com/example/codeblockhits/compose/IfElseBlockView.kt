@@ -25,7 +25,7 @@ fun IfElseBlockView(
     onUpdate: (CodeBlock) -> Unit,
     onRemove: () -> Unit,
     onAddToIfElse: (Int, CodeBlock, Boolean) -> Unit,
-    variablesMap: Map<String, String>,
+    variablesMap:Map<String, VariableValue>,
     nextId: Int,
     onIdIncrement: () -> Unit,
     modifier: Modifier = Modifier
@@ -231,6 +231,31 @@ fun IfElseBlockView(
                                 },
                                 variablesMap = variablesMap
                             )
+                            is ArrayBlock -> ArrayBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val updatedList = if (dialogTargetThen)
+                                        block.thenBlocks.map { if (it.id == updatedChild.id) updatedChild else it }
+                                    else
+                                        block.elseBlocks.map { if (it.id == updatedChild.id) updatedChild else it }
+
+                                    if (dialogTargetThen)
+                                        onUpdate(block.copy(thenBlocks = updatedList))
+                                    else
+                                        onUpdate(block.copy(elseBlocks = updatedList))
+                                },
+                                onRemove = {
+                                    val updatedList = if (dialogTargetThen)
+                                        block.thenBlocks.filter { it.id != childBlock.id }
+                                    else
+                                        block.elseBlocks.filter { it.id != childBlock.id }
+
+                                    if (dialogTargetThen)
+                                        onUpdate(block.copy(thenBlocks = updatedList))
+                                    else
+                                        onUpdate(block.copy(elseBlocks = updatedList))
+                                }
+                            )
                             is PrintBlock -> PrintBlockView(
                                 block = childBlock,
                                 onUpdate = { updatedChild ->
@@ -318,6 +343,31 @@ fun IfElseBlockView(
                                     onUpdate(block.copy(elseBlocks = newElseBlocks))
                                 },
                                 variablesMap = variablesMap
+                            )
+                            is ArrayBlock -> ArrayBlockView(
+                                block = childBlock,
+                                onUpdate = { updatedChild ->
+                                    val updatedList = if (dialogTargetThen)
+                                        block.thenBlocks.map { if (it.id == updatedChild.id) updatedChild else it }
+                                    else
+                                        block.elseBlocks.map { if (it.id == updatedChild.id) updatedChild else it }
+
+                                    if (dialogTargetThen)
+                                        onUpdate(block.copy(thenBlocks = updatedList))
+                                    else
+                                        onUpdate(block.copy(elseBlocks = updatedList))
+                                },
+                                onRemove = {
+                                    val updatedList = if (dialogTargetThen)
+                                        block.thenBlocks.filter { it.id != childBlock.id }
+                                    else
+                                        block.elseBlocks.filter { it.id != childBlock.id }
+
+                                    if (dialogTargetThen)
+                                        onUpdate(block.copy(thenBlocks = updatedList))
+                                    else
+                                        onUpdate(block.copy(elseBlocks = updatedList))
+                                }
                             )
                             is PrintBlock -> PrintBlockView(
                                 block = childBlock,
