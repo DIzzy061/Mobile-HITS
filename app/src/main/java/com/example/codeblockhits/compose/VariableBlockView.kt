@@ -24,10 +24,10 @@ import kotlin.math.roundToInt
 @Composable
 fun VariableBlockView(
     block: VariableBlock,
-    modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
-    variablesMap: Map<String, VariableValue>
+    variablesMap: Map<String, VariableValue>,
+    modifier: Modifier = Modifier
 ) {
 
     val computedValue = remember(block.value, variablesMap) {

@@ -186,9 +186,31 @@ fun interpretBlocksRPN(
                     if (valueResult.isError) return InterpreterResult(output + "Error in Assignment to '${block.target}': ${valueResult.errorMessage}", variables, block.id)
                     variables[block.target] = VariableValue.Scalar(valueResult.value)
                 }
-                is ArrayBlock -> {
-                    variables[block.name] = VariableValue.Array(block.values.toMutableList())
+                is WhileBlock -> {
+                    var safeguard = 1000
+                    while (safeguard-- > 0) {
+                        val conditionResult = evalRpn(block.condition, variables)
+                        if (conditionResult.isError) {
+                            return InterpreterResult(output + "Error in While condition: ${conditionResult.errorMessage}", variables, block.id)
+                        }
+
+                        val condition = conditionResult.value.toDoubleOrNull() ?: return InterpreterResult(
+                            output + "While condition is not a number: '${conditionResult.value}'", variables, block.id
+                        )
+
+                        if (condition == 0.0) break
+
+                        val loopResult = interpretBlocksRPN(
+                            block.innerBlocks,
+                            startBlockId = block.innerBlocks.firstOrNull()?.id,
+                            variables = variables.toMutableMap()
+                        )
+                        output.addAll(loopResult.output)
+                        if (loopResult.errorBlockId != null) return loopResult
+                        variables.putAll(loopResult.variables)
+                    }
                 }
+
                 is PrintBlock -> {
                     val result = block.expressions.map {
                         val res = evalRpn(it, variables)
@@ -236,7 +258,7 @@ fun interpretBlocksRPN(
             is AssignmentBlock -> block.nextBlockId
             is PrintBlock -> block.nextBlockId
             is IfElseBlock -> block.nextBlockId
-            is ArrayBlock -> block.nextBlockId
+            is WhileBlock -> block.nextBlockId
         }
     }
 

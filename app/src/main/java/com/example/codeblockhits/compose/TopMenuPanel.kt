@@ -24,7 +24,8 @@ fun TopMenuPanel(
     onAddAssignment: (String, String) -> Unit,
     onAddPrint: () -> Unit,
     onEvaluateAll: () -> Unit,
-    onArrowMode: () -> Unit
+    onArrowMode: () -> Unit,
+    onAddWhile: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Select Block") }
@@ -68,9 +69,6 @@ fun TopMenuPanel(
         if (isDarkTheme) MaterialTheme.colorScheme.onSecondary
         else Color.White
 
-
-    var arrayName by remember { mutableStateOf("") }
-    var arraySizeText by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Surface(
@@ -151,7 +149,6 @@ fun TopMenuPanel(
             }
         }
 
-        // ▼▼▼ Dropdown Block Menu ▼▼▼
         AnimatedVisibility(visible = expanded) {
             Card(
                 modifier = Modifier
@@ -169,7 +166,7 @@ fun TopMenuPanel(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("Variable", "If/Else", "Assignment", "Array").forEach { label ->
+                        listOf("Variable", "If/Else", "Assignment", "While").forEach { label ->
                             OutlinedButton(
                                 onClick = {
                                     selectedOption = label
@@ -242,52 +239,10 @@ fun TopMenuPanel(
             }
         }
 
-        AnimatedVisibility(visible = selectedOption == "Array") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    OutlinedTextField(
-                        value = arrayName,
-                        onValueChange = { arrayName = it },
-                        label = { Text("Array name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = arraySizeText,
-                        onValueChange = { arraySizeText = it },
-                        label = { Text("Array size") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = {
-                            val size = arraySizeText.toIntOrNull()
-                            if (arrayName.isNotBlank() && size != null && size > 0) {
-                                onAddVariable("$arrayName:$size")
-                                selectedOption = "Select Block"
-                                arrayName = ""
-                                arraySizeText = ""
-                            }
-                        },
-                        enabled = arrayName.isNotBlank() && arraySizeText.toIntOrNull() != null,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Add Array")
-                    }
-                }
+        AnimatedVisibility(visible = selectedOption == "While") {
+            SimpleAddButtonCard {
+                onAddWhile()
+                selectedOption = "Select Block"
             }
         }
 

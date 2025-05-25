@@ -54,16 +54,10 @@ fun CodeBlocksList(
     val arrowColor = if (isDarkTheme) Color.White else Color.Black
     val errorHighlightColor = MaterialTheme.colorScheme.error
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
         blocks.forEach { block ->
             val fromCenter = blockCenters[block.id]
-            val toId = when (block) {
-                is VariableBlock -> block.nextBlockId
-                is AssignmentBlock -> block.nextBlockId
-                is IfElseBlock -> block.nextBlockId
-                is ArrayBlock -> block.nextBlockId
-                is PrintBlock -> block.nextBlockId
-            }
+            val toId = block.nextBlockId
             val toCenter = toId?.let { blockCenters[it] }
             if (fromCenter != null && toCenter != null) {
                 ArrowLineThemeAware(from = fromCenter, to = toCenter, color = arrowColor)
@@ -80,12 +74,8 @@ fun CodeBlocksList(
                     .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
                     .pointerInput(block.id) {
                         detectDragGestures(
-                            onDragStart = {
-                                draggingBlockId = block.id
-                            },
-                            onDragEnd = {
-                                draggingBlockId = null
-                            },
+                            onDragStart = { draggingBlockId = block.id },
+                            onDragEnd = { draggingBlockId = null },
                             onDrag = { _, dragAmount ->
                                 val current = blockOffsets[block.id] ?: Offset(100f, 100f + index * 200f)
                                 blockOffsets[block.id] = current + dragAmount
@@ -123,36 +113,23 @@ fun CodeBlocksList(
                 when (block) {
                     is VariableBlock -> VariableBlockView(
                         block = block,
-                        onValueChange = { newValue -> onUpdate(block.copy(value = newValue)) },
+                        onValueChange = { newVal -> onUpdate(block.copy(value = newVal)) },
                         onRemove = { onRemove(block.id) },
                         variablesMap = variablesMap
                     )
+
+
+                    is AssignmentBlock -> AssignmentBlockView(block, onUpdate, { onRemove(block.id) }, variablesMap)
+
+                    is PrintBlock -> PrintBlockView(block, onUpdate, { onRemove(block.id) }, variablesMap)
 
                     is IfElseBlock -> IfElseBlockView(
+                        block, onUpdate, { onRemove(block.id) }, onAddToIfElse, variablesMap, nextId, onIdIncrement
+                    )
+
+                    is WhileBlock -> WhileBlockView(
                         block = block,
                         onUpdate = onUpdate,
-                        onRemove = { onRemove(block.id) },
-                        onAddToIfElse = onAddToIfElse,
-                        variablesMap = variablesMap,
-                        nextId = nextId,
-                        onIdIncrement = onIdIncrement
-                    )
-
-                    is AssignmentBlock -> AssignmentBlockView(
-                        block = block,
-                        onUpdate = { updated -> onUpdate(updated) },
-                        onRemove = { onRemove(block.id) },
-                        variablesMap = variablesMap
-                    )
-                    is ArrayBlock -> ArrayBlockView(
-                        block = block,
-                        onUpdate = { updated -> onUpdate(updated) },
-                        onRemove = { onRemove(block.id) }
-                    )
-
-                                is PrintBlock -> PrintBlockView(
-                        block = block,
-                        onUpdate = { updated -> onUpdate(updated) },
                         onRemove = { onRemove(block.id) },
                         variablesMap = variablesMap
                     )
@@ -161,6 +138,7 @@ fun CodeBlocksList(
         }
     }
 }
+
 
 @Composable
 fun ArrowLineThemeAware(from: Offset, to: Offset, color: Color) {
