@@ -12,6 +12,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,6 +31,10 @@ fun MainScreen() {
 
     var isArrowMode by remember { mutableStateOf(false) }
     var selectedSourceBlockId by remember { mutableStateOf<Int?>(null) }
+
+    val errorMessage = stringResource(R.string.error)
+    val successMessage = stringResource(R.string.calculate)
+    val variableExistsMessage = stringResource(R.string.variableExists)
 
     fun getVariablesMap(): Map<String, VariableValue> {
         return buildMap {
@@ -49,9 +55,9 @@ fun MainScreen() {
         showOutputDialog = true
         coroutineScope.launch {
             val msg = if (result.errorBlockId != null) {
-                "Error during evaluation. Check highlighted block and output."
+                errorMessage
             } else {
-                "All blocks evaluated successfully (RPN)"
+                successMessage
             }
             snackbarHostState.showSnackbar(msg)
         }
@@ -89,7 +95,7 @@ fun MainScreen() {
                         blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
                     } else {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Имя '$name' уже используется")
+                            snackbarHostState.showSnackbar(variableExistsMessage)
                         }
                     }
                 },

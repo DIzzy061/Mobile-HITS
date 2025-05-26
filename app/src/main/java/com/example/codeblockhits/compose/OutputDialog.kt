@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.codeblockhits.R
 
 @Composable
 fun OutputDialog(
@@ -30,7 +31,7 @@ fun OutputDialog(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Program Output",
+                    text = stringResource(R.string.calculate),
                     style = MaterialTheme.typography.titleLarge
                 )
 
@@ -65,7 +66,7 @@ fun OutputDialog(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Close")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         }

@@ -44,63 +44,65 @@ fun evaluateExpression(expression: String, variables: Map<String, VariableValue>
 }
 
 fun evaluateMathExpression(expression: String): Double {
-    return object : Any() {
-        var pos = -1
-        var ch = 0.toChar()
-        fun nextChar() { ch = if (++pos < expression.length) expression[pos] else (-1).toChar() }
-        fun eat(charToEat: Char): Boolean {
-            while (ch == ' ') nextChar()
-            if (ch == charToEat) {
-                nextChar()
-                return true
-            }
-            return false
+    val tokens = expression.trim().split(Regex("(?<=[+\\-*/%^()])|(?=[+\\-*/%^()])")).filter { it.isNotEmpty() }
+    val stack = mutableListOf<Double>()
+    val operators = mutableListOf<String>()
+    
+    fun precedence(op: String): Int = when(op) {
+        "+", "-" -> 1
+        "*", "/", "%" -> 2
+        "^" -> 3
+        else -> 0
+    }
+    
+    fun applyOperator(op: String) {
+        if (stack.size < 2) throw RuntimeException("Not enough operands for operator '$op'")
+        val b = stack.removeAt(stack.lastIndex)
+        val a = stack.removeAt(stack.lastIndex)
+        val result = when(op) {
+            "+" -> a + b
+            "-" -> a - b
+            "*" -> a * b
+            "/" -> if (b == 0.0) throw RuntimeException("Division by zero") else a / b
+            "%" -> if (b == 0.0) throw RuntimeException("Modulo by zero") else a % b
+            "^" -> Math.pow(a, b)
+            else -> throw RuntimeException("Unknown operator '$op'")
         }
-        fun parse(): Double {
-            nextChar()
-            val x = parseExpression()
-            if (pos < expression.length) throw RuntimeException("Unexpected: $ch")
-            return x
-        }
-        fun parseExpression(): Double {
-            var x = parseTerm()
-            while (true) {
-                when {
-                    eat('+') -> x += parseTerm()
-                    eat('-') -> x -= parseTerm()
-                    else -> return x
+        stack.add(result)
+    }
+    
+    for (token in tokens) {
+        when {
+            token.matches(Regex("-?\\d+(\\.\\d+)?")) -> stack.add(token.toDouble())
+            token == "(" -> operators.add(token)
+            token == ")" -> {
+                while (operators.isNotEmpty() && operators.last() != "(") {
+                    applyOperator(operators.removeAt(operators.lastIndex))
                 }
-            }
-        }
-        fun parseTerm(): Double {
-            var x = parseFactor()
-            while (true) {
-                when {
-                    eat('*') -> x *= parseFactor()
-                    eat('/') -> x /= parseFactor()
-                    eat('%') -> x %= parseFactor()
-                    else -> return x
+                if (operators.isEmpty() || operators.last() != "(") {
+                    throw RuntimeException("Mismatched parentheses")
                 }
+                operators.removeAt(operators.lastIndex)
             }
-        }
-        fun parseFactor(): Double {
-            if (eat('+')) return parseFactor()
-            if (eat('-')) return -parseFactor()
-            var x: Double
-            val startPos = pos
-            if (eat('(')) {
-                x = parseExpression()
-                eat(')')
-            } else if (ch in '0'..'9' || ch == '.') {
-                while (ch in '0'..'9' || ch == '.') nextChar()
-                x = expression.substring(startPos, pos).toDouble()
-            } else {
-                throw RuntimeException("Unexpected: $ch")
+            token in setOf("+", "-", "*", "/", "%", "^") -> {
+                while (operators.isNotEmpty() && 
+                       operators.last() != "(" && 
+                       precedence(operators.last()) >= precedence(token)) {
+                    applyOperator(operators.removeAt(operators.lastIndex))
+                }
+                operators.add(token)
             }
-            if (eat('^')) x = Math.pow(x, parseFactor())
-            return x
+            else -> throw RuntimeException("Invalid token: '$token'")
         }
-    }.parse()
+    }
+    
+    while (operators.isNotEmpty()) {
+        if (operators.last() == "(") throw RuntimeException("Mismatched parentheses")
+        applyOperator(operators.removeAt(operators.lastIndex))
+    }
+    
+    if (stack.size != 1) throw RuntimeException("Invalid expression")
+    return stack[0]
 }
 
 fun evalRpn(expr: String, variables: Map<String, VariableValue>): RpnResult {
@@ -198,9 +200,15 @@ fun interpretBlocksRPN(
                 }
                 is PrintBlock -> {
                     val result = block.expressions.map {
-                        val res = evalRpn(it, variables)
-                        if (res.isError) return InterpreterResult(output + "Error in Print '$it': ${res.errorMessage}", variables, block.id)
-                        res.value
+                        try {
+                            val value = evaluateExpression(it, variables)
+                            if (value.startsWith("Error:")) {
+                                return InterpreterResult(output + "Error in Print '$it': $value", variables, block.id)
+                            }
+                            value
+                        } catch (e: Exception) {
+                            return InterpreterResult(output + "Error in Print '$it': ${e.message}", variables, block.id)
+                        }
                     }
                     output.add(result.joinToString(", "))
                 }

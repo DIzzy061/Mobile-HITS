@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.codeblockhits.R
 import com.example.codeblockhits.data.PrintBlock
 import com.example.codeblockhits.data.evaluateExpression
 
@@ -44,7 +46,7 @@ fun PrintBlockView(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "🖨️ Print",
+                        text = "🖨️ ${stringResource(R.string.addPrint)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -52,7 +54,7 @@ fun PrintBlockView(
                     IconButton(onClick = onRemove) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Удалить",
+                            contentDescription = stringResource(R.string.delete),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -74,7 +76,7 @@ fun PrintBlockView(
                                 expressions = newExpressions
                                 onUpdate(block.copy(expressions = newExpressions))
                             },
-                            label = { Text("Выражение ${index + 1}") },
+                            label = { Text("${stringResource(R.string.expression)} ${index + 1}") },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -92,7 +94,7 @@ fun PrintBlockView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Удалить выражение",
+                                contentDescription = stringResource(R.string.delete),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -117,18 +119,18 @@ fun PrintBlockView(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Добавить выражение",
+                        contentDescription = stringResource(R.string.addBlock),
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Добавить выражение")
+                    Text(stringResource(R.string.addBlock))
                 }
 
                 // Show computed values
                 if (computedValues.any { it.isNotEmpty() }) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Результат: ${computedValues.joinToString(", ")}",
+                        text = "${stringResource(R.string.calculateNow)}: ${computedValues.joinToString(", ")}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )

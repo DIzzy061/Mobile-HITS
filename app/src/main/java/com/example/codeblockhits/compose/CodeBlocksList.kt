@@ -131,7 +131,9 @@ fun CodeBlocksList(
                         block = block,
                         onUpdate = onUpdate,
                         onRemove = { onRemove(block.id) },
-                        variablesMap = variablesMap
+                        variablesMap = variablesMap,
+                        nextId = nextId,
+                        onIdIncrement = onIdIncrement
                     )
                 }
             }
