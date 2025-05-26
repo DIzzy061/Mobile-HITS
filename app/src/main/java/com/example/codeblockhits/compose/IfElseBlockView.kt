@@ -1,6 +1,8 @@
 package com.example.codeblockhits.compose
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -96,13 +98,14 @@ fun IfElseBlockView(
     }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -200,7 +203,6 @@ fun IfElseBlockView(
     }
 }
 
-
 @Composable
 private fun RenderBlockColumn(
     title: String,
@@ -214,8 +216,17 @@ private fun RenderBlockColumn(
     onIdIncrement: () -> Unit,
     onAddVariable: () -> Unit
 ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+) {
         Text(title, color = if (isThen) Color.Green else Color.Red)
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
+        ) {
             blocks.forEach { childBlock ->
                 val updateList = { updated: CodeBlock ->
                     val newList = blocks.map { if (it.id == updated.id) updated else it }
@@ -283,6 +294,7 @@ private fun RenderBlockColumn(
                 onIdIncrement()
             }, modifier = Modifier.padding(top = 4.dp)) {
                 Text("Add While to ${if (isThen) "Then" else "Else"}")
+            }
             }
         }
     }

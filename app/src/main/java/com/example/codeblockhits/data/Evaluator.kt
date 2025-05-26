@@ -177,37 +177,75 @@ fun interpretBlocksRPN(
         try {
             when (block) {
                 is VariableBlock -> {
-                    val valueResult = evalRpn(block.value, variables)
-                    if (valueResult.isError) return InterpreterResult(output + "Error in Variable '${block.name}': ${valueResult.errorMessage}", variables, block.id)
-                    variables[block.name] = VariableValue.Scalar(valueResult.value)
+                    if (!variables.containsKey(block.name)) {
+                        val evaluatedValue = evaluateExpression(block.value, variables)
+                        if (evaluatedValue.startsWith("Error:")) {
+                            return InterpreterResult(output + "Error in Variable '${block.name}': $evaluatedValue", variables, block.id)
+                        }
+                        variables[block.name] = VariableValue.Scalar(evaluatedValue)
+                    }
                 }
                 is AssignmentBlock -> {
-                    val valueResult = evalRpn(block.expression, variables)
-                    if (valueResult.isError) return InterpreterResult(output + "Error in Assignment to '${block.target}': ${valueResult.errorMessage}", variables, block.id)
-                    variables[block.target] = VariableValue.Scalar(valueResult.value)
+                    val evaluatedValue = evaluateExpression(block.expression, variables)
+                    if (evaluatedValue.startsWith("Error:")) {
+                        return InterpreterResult(output + "Error in Assignment to '${block.target}': $evaluatedValue", variables, block.id)
+                    }
+                    variables[block.target] = VariableValue.Scalar(evaluatedValue)
                 }
                 is WhileBlock -> {
                     var safeguard = 1000
-                    while (safeguard-- > 0) {
-                        val conditionResult = evalRpn(block.condition, variables)
-                        if (conditionResult.isError) {
-                            return InterpreterResult(output + "Error in While condition: ${conditionResult.errorMessage}", variables, block.id)
+                    val match = Regex("(.+?)\\s*(==|!=|>|<|>=|<=)\\s*(.+)").find(block.condition)
+                    if (match != null) {
+                        val (leftExpr, op, rightExpr) = match.destructured
+                        while (safeguard-- > 0) {
+                            val left = evalRpn(leftExpr, variables)
+                            val right = evalRpn(rightExpr, variables)
+                            if (left.isError || right.isError) {
+                                return InterpreterResult(output + "Error in While condition: ${left.errorMessage} ${right.errorMessage}".trim(), variables, block.id)
+                            }
+                            val l = left.value.toDoubleOrNull()
+                            val r = right.value.toDoubleOrNull()
+                            if (l == null || r == null) {
+                                return InterpreterResult(output + "Error in While condition: Operands must be numbers.", variables, block.id)
+                            }
+                            val cond = when (op) {
+                                "==" -> l == r
+                                "!=" -> l != r
+                                ">"  -> l > r
+                                "<"  -> l < r
+                                ">=" -> l >= r
+                                "<=" -> l <= r
+                                else -> false
+                            }
+                            if (!cond) break
+                            val loopResult = interpretBlocksRPN(
+                                block.innerBlocks,
+                                startBlockId = block.innerBlocks.firstOrNull()?.id,
+                                variables = variables.toMutableMap()
+                            )
+                            output.addAll(loopResult.output)
+                            if (loopResult.errorBlockId != null) return loopResult
+                            variables.putAll(loopResult.variables)
                         }
-
-                        val condition = conditionResult.value.toDoubleOrNull() ?: return InterpreterResult(
-                            output + "While condition is not a number: '${conditionResult.value}'", variables, block.id
-                        )
-
-                        if (condition == 0.0) break
-
-                        val loopResult = interpretBlocksRPN(
-                            block.innerBlocks,
-                            startBlockId = block.innerBlocks.firstOrNull()?.id,
-                            variables = variables.toMutableMap()
-                        )
-                        output.addAll(loopResult.output)
-                        if (loopResult.errorBlockId != null) return loopResult
-                        variables.putAll(loopResult.variables)
+                    } else {
+                        while (safeguard-- > 0) {
+                            val conditionResult = evalRpn(block.condition, variables)
+                            if (conditionResult.isError) {
+                                return InterpreterResult(output + "Error in While condition: ${conditionResult.errorMessage}", variables, block.id)
+                            }
+                            val condition = conditionResult.value.toDoubleOrNull() ?: return InterpreterResult(
+                                output + "While condition is not a number: '${conditionResult.value}'", variables, block.id
+                            )
+                            if (condition == 0.0) break
+                            val loopResult = interpretBlocksRPN(
+                                block.innerBlocks,
+                                startBlockId = block.innerBlocks.firstOrNull()?.id,
+                                variables = variables.toMutableMap()
+                            )
+                            output.addAll(loopResult.output)
+                            if (loopResult.errorBlockId != null) return loopResult
+                            variables.putAll(loopResult.variables)
+                        }
                     }
                 }
 

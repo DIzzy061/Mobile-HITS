@@ -1,6 +1,8 @@
 package com.example.codeblockhits.compose
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -102,20 +104,20 @@ fun WhileBlockView(
     }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🔁 While", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Text("🔄 While", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 IconButton(onClick = onRemove) {
                     Icon(Icons.Default.Close, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.error)
                 }
@@ -171,7 +173,11 @@ fun WhileBlockView(
             Spacer(modifier = Modifier.height(12.dp))
             Text("Loop body (${block.innerBlocks.size})", style = MaterialTheme.typography.labelLarge)
 
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
+            ) {
                 block.innerBlocks.forEach { child ->
                     val updateInner = { updated: CodeBlock ->
                         onUpdate(block.copy(innerBlocks = block.innerBlocks.map {
@@ -194,34 +200,54 @@ fun WhileBlockView(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { showDialog = true }) { Text("Add Variable") }
+                
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Button(onClick = { showDialog = true }, modifier = Modifier.fillMaxWidth()) { 
+                        Text("Add Variable") 
+                    }
 
-                Button(onClick = {
+                    Button(
+                        onClick = {
                     val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
                     onUpdate(block.copy(innerBlocks = block.innerBlocks + AssignmentBlock(id, "", "")))
-                }, modifier = Modifier.padding(top = 4.dp)) {
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     Text("Add Assignment")
                 }
 
-                Button(onClick = {
+                    Button(
+                        onClick = {
                     val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
                     onUpdate(block.copy(innerBlocks = block.innerBlocks + PrintBlock(id)))
-                }, modifier = Modifier.padding(top = 4.dp)) {
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     Text("Add Print")
                 }
 
-                Button(onClick = {
+                    Button(
+                        onClick = {
                     val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
                     onUpdate(block.copy(innerBlocks = block.innerBlocks + IfElseBlock(id)))
-                }, modifier = Modifier.padding(top = 4.dp)) {
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     Text("Add If/Else")
                 }
 
-                Button(onClick = {
+                    Button(
+                        onClick = {
                     val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
                     onUpdate(block.copy(innerBlocks = block.innerBlocks + WhileBlock(id, condition = "1")))
-                }, modifier = Modifier.padding(top = 4.dp)) {
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     Text("Add While")
+                    }
                 }
             }
         }
