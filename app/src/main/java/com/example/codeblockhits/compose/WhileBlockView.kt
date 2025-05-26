@@ -22,9 +22,9 @@ fun WhileBlockView(
     variablesMap: Map<String, VariableValue>,
     modifier: Modifier = Modifier
 ) {
-    var leftOperand by remember { mutableStateOf("") }
-    var rightOperand by remember { mutableStateOf("") }
-    var operator by remember { mutableStateOf("!=") }
+    var leftOperand by remember { mutableStateOf(block.leftOperand) }
+    var rightOperand by remember { mutableStateOf(block.rightOperand) }
+    var operator by remember { mutableStateOf(block.operator) }
 
     val operatorOptions = listOf("==", "!=", ">", "<", ">=", "<=")
     var operatorMenuExpanded by remember { mutableStateOf(false) }
@@ -33,22 +33,12 @@ fun WhileBlockView(
     var newVarName by remember { mutableStateOf("") }
     var showErrorDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(block.condition) {
-        val match = Regex("""(.+?)\s*(==|!=|>|<|>=|<=)\s*(.+)""").find(block.condition)
-        if (match != null) {
-            val (left, op, right) = match.destructured
-            leftOperand = left
-            operator = op
-            rightOperand = right
-        } else {
-            leftOperand = ""
-            operator = "!="
-            rightOperand = "0"
-        }
-    }
-
     fun updateCondition() {
-        onUpdate(block.copy(condition = "$leftOperand $operator $rightOperand"))
+        onUpdate(block.copy(
+            leftOperand = leftOperand,
+            operator = operator,
+            rightOperand = rightOperand
+        ))
     }
 
     if (showErrorDialog) {
@@ -200,53 +190,53 @@ fun WhileBlockView(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Button(onClick = { showDialog = true }, modifier = Modifier.fillMaxWidth()) { 
-                        Text("Add Variable") 
+                    Button(onClick = { showDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Add Variable")
                     }
 
                     Button(
                         onClick = {
-                    val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
-                    onUpdate(block.copy(innerBlocks = block.innerBlocks + AssignmentBlock(id, "", "")))
+                            val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
+                            onUpdate(block.copy(innerBlocks = block.innerBlocks + AssignmentBlock(id, "", "")))
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                    Text("Add Assignment")
-                }
+                        Text("Add Assignment")
+                    }
 
                     Button(
                         onClick = {
-                    val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
-                    onUpdate(block.copy(innerBlocks = block.innerBlocks + PrintBlock(id)))
+                            val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
+                            onUpdate(block.copy(innerBlocks = block.innerBlocks + PrintBlock(id)))
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                    Text("Add Print")
-                }
+                        Text("Add Print")
+                    }
 
                     Button(
                         onClick = {
-                    val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
-                    onUpdate(block.copy(innerBlocks = block.innerBlocks + IfElseBlock(id)))
+                            val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
+                            onUpdate(block.copy(innerBlocks = block.innerBlocks + IfElseBlock(id)))
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                    Text("Add If/Else")
-                }
+                        Text("Add If/Else")
+                    }
 
                     Button(
                         onClick = {
-                    val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
-                    onUpdate(block.copy(innerBlocks = block.innerBlocks + WhileBlock(id, condition = "1")))
+                            val id = block.innerBlocks.maxOfOrNull { it.id }?.plus(1) ?: 1000
+                            onUpdate(block.copy(innerBlocks = block.innerBlocks + WhileBlock(id)))
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                    Text("Add While")
+                        Text("Add While")
                     }
                 }
             }

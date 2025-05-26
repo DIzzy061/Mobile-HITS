@@ -288,7 +288,7 @@ private fun RenderBlockColumn(
             Button(onClick = {
                 onAddToIfElse(
                     parentBlock.id,
-                    WhileBlock(id = nextId, condition = "1", innerBlocks = emptyList()),
+                    WhileBlock(id = nextId, leftOperand = "1", operator = "!=", rightOperand = "0", innerBlocks = emptyList()),
                     isThen
                 )
                 onIdIncrement()
