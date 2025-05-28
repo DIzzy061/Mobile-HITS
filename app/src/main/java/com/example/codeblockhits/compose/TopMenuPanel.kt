@@ -14,8 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.codeblockhits.R
 
 @Composable
 fun TopMenuPanel(
@@ -24,10 +26,13 @@ fun TopMenuPanel(
     onAddAssignment: (String, String) -> Unit,
     onAddPrint: () -> Unit,
     onEvaluateAll: () -> Unit,
-    onArrowMode: () -> Unit
+    onArrowMode: () -> Unit,
+    onAddWhile: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf("Select Block") }
+    val selectBlockText = stringResource(R.string.selectBlock)
+    val addPrintText = stringResource(R.string.addPrint)
+    var selectedOption by remember { mutableStateOf(selectBlockText) }
     var inputText by remember { mutableStateOf("") }
 
     val isDarkTheme = isSystemInDarkTheme()
@@ -68,10 +73,6 @@ fun TopMenuPanel(
         if (isDarkTheme) MaterialTheme.colorScheme.onSecondary
         else Color.White
 
-
-    var arrayName by remember { mutableStateOf("") }
-    var arraySizeText by remember { mutableStateOf("") }
-
     Column(modifier = Modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
@@ -80,7 +81,7 @@ fun TopMenuPanel(
             shadowElevation = 4.dp
         ) {
             Text(
-                text = "Visual Programming Workspace",
+                text = stringResource(R.string.appName),
                 style = MaterialTheme.typography.titleMedium,
                 color = headerTextColor,
                 modifier = Modifier
@@ -130,7 +131,7 @@ fun TopMenuPanel(
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Evaluate All")
+                    Text(stringResource(R.string.calculate))
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -146,12 +147,11 @@ fun TopMenuPanel(
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Добавить стрелку")
+                    Text(stringResource(R.string.addBlock))
                 }
             }
         }
 
-        // ▼▼▼ Dropdown Block Menu ▼▼▼
         AnimatedVisibility(visible = expanded) {
             Card(
                 modifier = Modifier
@@ -161,7 +161,7 @@ fun TopMenuPanel(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Add New Block", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.addBlock), style = MaterialTheme.typography.titleMedium)
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -169,7 +169,12 @@ fun TopMenuPanel(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("Variable", "If/Else", "Assignment", "Array").forEach { label ->
+                        listOf(
+                            stringResource(R.string.variable),
+                            stringResource(R.string.ifElse),
+                            stringResource(R.string.addAssignment),
+                            stringResource(R.string.addWhile)
+                        ).forEach { label ->
                             OutlinedButton(
                                 onClick = {
                                     when (label) {
@@ -207,7 +212,7 @@ fun TopMenuPanel(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Print")
+                            Text(stringResource(R.string.addPrint))
                         }
 
                         OutlinedButton(
@@ -223,96 +228,53 @@ fun TopMenuPanel(
             }
         }
 
-        AnimatedVisibility(visible = selectedOption == "Variable") {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.variable)) {
             BlockEntryCard(
-                label = "Variable Name",
+                label = stringResource(R.string.variableName),
                 inputText = inputText,
                 onInputChange = { inputText = it },
                 onSubmit = {
                     if (inputText.isNotBlank()) {
                         onAddVariable(inputText.trim())
                         inputText = ""
-                        selectedOption = "Select Block"
+                        selectedOption = selectBlockText
                     }
                 }
             )
         }
 
-        AnimatedVisibility(visible = selectedOption == "If/Else") {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.ifElse)) {
             SimpleAddButtonCard {
                 onAddIfElse()
-                selectedOption = "Select Block"
+                selectedOption = selectBlockText
             }
         }
 
-        AnimatedVisibility(visible = selectedOption == "Assignment") {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addAssignment)) {
             SimpleAddButtonCard {
                 onAddAssignment("", "")
-                selectedOption = "Select Block"
+                selectedOption = selectBlockText
             }
         }
 
-        AnimatedVisibility(visible = selectedOption == "Array") {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    OutlinedTextField(
-                        value = arrayName,
-                        onValueChange = { arrayName = it },
-                        label = { Text("Array name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = arraySizeText,
-                        onValueChange = { arraySizeText = it },
-                        label = { Text("Array size") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = {
-                            val size = arraySizeText.toIntOrNull()
-                            if (arrayName.isNotBlank() && size != null && size > 0) {
-                                onAddVariable("$arrayName:$size")
-                                selectedOption = "Select Block"
-                                arrayName = ""
-                                arraySizeText = ""
-                            }
-                        },
-                        enabled = arrayName.isNotBlank() && arraySizeText.toIntOrNull() != null,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Add Array")
-                    }
-                }
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addWhile)) {
+            SimpleAddButtonCard {
+                onAddWhile()
+                selectedOption = selectBlockText
             }
         }
 
-
-        AnimatedVisibility(visible = selectedOption == "Print") {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addPrint)) {
             SimpleAddButtonCard {
                 onAddPrint()
-                selectedOption = "Select Block"
+                selectedOption = selectBlockText
             }
         }
     }
 }
 
 @Composable
-private fun BlockEntryCard(
+fun BlockEntryCard(
     label: String,
     inputText: String,
     onInputChange: (String) -> Unit,
@@ -321,54 +283,48 @@ private fun BlockEntryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
                 value = inputText,
                 onValueChange = onInputChange,
                 label = { Text(label) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp)
+                modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = onSubmit,
-                enabled = inputText.isNotBlank(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Add Block")
+                Text(stringResource(R.string.addBlock))
             }
         }
     }
 }
 
 @Composable
-private fun SimpleAddButtonCard(onClick: () -> Unit) {
+fun SimpleAddButtonCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
+        Button(
+            onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.End
+            shape = RoundedCornerShape(8.dp)
         ) {
-            Button(onClick = onClick, shape = RoundedCornerShape(8.dp)) {
-                Text("Add Block")
-            }
+            Text(stringResource(R.string.addBlock))
         }
     }
 }

@@ -37,10 +37,12 @@ data class PrintBlock(
         get() = expressions.joinToString(", ")
 }
 
-data class ArrayBlock(
+data class WhileBlock(
     override val id: Int,
-    val name: String,
-    val size: Int,
-    val values: MutableList<String> = MutableList(size) { "0" },
+    val leftOperand: String = "",
+    val operator: String = "!=",
+    val rightOperand: String = "0",
+    val innerBlocks: List<CodeBlock> = emptyList(),
     override var nextBlockId: Int? = null
 ) : CodeBlock
+

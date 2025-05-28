@@ -11,8 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
 
@@ -29,7 +31,6 @@ fun AssignmentBlockView(
 
     Box(
         modifier = modifier
-
     ) {
         Card(
             modifier = Modifier
@@ -45,7 +46,7 @@ fun AssignmentBlockView(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "📝 Присваивание",
+                        text = "📝 ${stringResource(R.string.addAssignment)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -53,7 +54,7 @@ fun AssignmentBlockView(
                     IconButton(onClick = onRemove) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Удалить",
+                            contentDescription = stringResource(R.string.delete),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -66,7 +67,7 @@ fun AssignmentBlockView(
                             target = it
                             onUpdate(block.copy(target = it, expression = expr))
                         },
-                        label = { Text("Переменная") },
+                        label = { Text(stringResource(R.string.variable)) },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -84,7 +85,7 @@ fun AssignmentBlockView(
                             expr = it
                             onUpdate(block.copy(target = target, expression = it))
                         },
-                        label = { Text("Выражение") },
+                        label = { Text(stringResource(R.string.expression)) },
                         modifier = Modifier.weight(1f)
                     )
                 }

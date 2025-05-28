@@ -23,10 +23,10 @@ import com.example.codeblockhits.data.evaluateExpression
 @Composable
 fun VariableBlockView(
     block: VariableBlock,
-    modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
-    variablesMap: Map<String, VariableValue>
+    variablesMap: Map<String, VariableValue>,
+    modifier: Modifier = Modifier
 ) {
 
     val computedValue = remember(block.value, variablesMap) {
@@ -63,7 +63,7 @@ fun VariableBlockView(
                     IconButton(onClick = onRemove) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.delete),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -74,7 +74,7 @@ fun VariableBlockView(
                 OutlinedTextField(
                     value = block.value,
                     onValueChange = onValueChange,
-                    label = { Text("Variable Value") },
+                    label = { Text(stringResource(R.string.variableValue)) },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyMedium,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -96,7 +96,7 @@ fun VariableBlockView(
                     onClick = { onValueChange(computedValue) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Calculate now")
+                    Text(stringResource(R.string.calculateNow))
                 }
             }
         }

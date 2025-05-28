@@ -1,5 +1,6 @@
 package com.example.codeblockhits.compose
 
+import com.example.codeblockhits.data.*
 import com.example.codeblockhits.data.VariableValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -11,7 +12,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import com.example.codeblockhits.data.*
+import androidx.compose.ui.res.stringResource
+import com.example.codeblockhits.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -30,12 +32,14 @@ fun MainScreen() {
     var isArrowMode by remember { mutableStateOf(false) }
     var selectedSourceBlockId by remember { mutableStateOf<Int?>(null) }
 
+    val errorMessage = stringResource(R.string.error)
+    val successMessage = stringResource(R.string.calculate)
+    val variableExistsMessage = stringResource(R.string.variableExists)
+
     fun getVariablesMap(): Map<String, VariableValue> {
         return buildMap {
             blocks.filterIsInstance<VariableBlock>()
                 .forEach { put(it.name, VariableValue.Scalar(it.value)) }
-            blocks.filterIsInstance<ArrayBlock>()
-                .forEach { put(it.name, VariableValue.Array(it.values.toMutableList())) }
         }
     }
 
@@ -44,16 +48,16 @@ fun MainScreen() {
         val result = interpretBlocksRPN(
             blocks = blocks.toMutableList(),
             startBlockId = blocks.firstOrNull()?.id,
-            variables = getVariablesMap().toMutableMap() // ✅
+            variables = getVariablesMap().toMutableMap()
         )
         programOutput = result.output
         erroredBlockId = result.errorBlockId
         showOutputDialog = true
         coroutineScope.launch {
             val msg = if (result.errorBlockId != null) {
-                "Error during evaluation. Check highlighted block and output."
+                errorMessage
             } else {
-                "All blocks evaluated successfully (RPN)"
+                successMessage
             }
             snackbarHostState.showSnackbar(msg)
         }
@@ -71,7 +75,7 @@ fun MainScreen() {
                         is AssignmentBlock -> it.copy(nextBlockId = blockId)
                         is IfElseBlock -> it.copy(nextBlockId = blockId)
                         is PrintBlock -> it.copy(nextBlockId = blockId)
-                        is ArrayBlock -> it.copy(nextBlockId = blockId)
+                        is WhileBlock -> it.copy(nextBlockId = blockId)
                     }
                 } else it
             }
@@ -84,40 +88,18 @@ fun MainScreen() {
         topBar = {
             TopMenuPanel(
                 onAddVariable = { input ->
-                    val parts = input.split(":")
-                    val allNames = blocks.mapNotNull {
-                        when (it) {
-                            is VariableBlock -> it.name
-                            is ArrayBlock -> it.name
-                            else -> null
-                        }
-                    }
+                    val name = input.trim()
+                    val allNames = blocks.filterIsInstance<VariableBlock>().map { it.name }
 
-                    if (parts.size == 2) {
-                        val arrayName = parts[0]
-                        val size = parts[1].toIntOrNull()
-
-                        if (size != null && arrayName !in allNames) {
-                            blocks = blocks + ArrayBlock(id = nextId++, name = arrayName, size = size)
-                        } else {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Имя '$arrayName' уже используется")
-                            }
-                        }
+                    if (name.isNotBlank() && name !in allNames) {
+                        blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
                     } else {
-                        val name = input.trim()
-                        if (name.isNotBlank() && name !in allNames) {
-                            blocks = blocks + VariableBlock(id = nextId++, name = name, value = "0")
-                        } else {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Имя '$name' уже используется")
-                            }
-
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(variableExistsMessage)
                         }
                     }
                 },
-
-                        onAddIfElse = {
+                onAddIfElse = {
                     blocks = blocks + IfElseBlock(id = nextId++)
                 },
                 onAddAssignment = { target, expression ->
@@ -125,6 +107,9 @@ fun MainScreen() {
                 },
                 onAddPrint = {
                     blocks = blocks + PrintBlock(id = nextId++)
+                },
+                onAddWhile = {
+                    blocks = blocks + WhileBlock(id = nextId++,)
                 },
                 onEvaluateAll = { evaluateAllBlocks() },
                 onArrowMode = {
