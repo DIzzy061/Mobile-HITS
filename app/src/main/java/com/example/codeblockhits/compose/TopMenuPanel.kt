@@ -177,8 +177,18 @@ fun TopMenuPanel(
                         ).forEach { label ->
                             OutlinedButton(
                                 onClick = {
-                                    selectedOption = label
-                                    expanded = false
+                                    when (label) {
+                                        "Variable" -> selectedOption = label
+                                        "If/Else" -> {
+                                            onAddIfElse()
+                                            selectedOption = "Select Block"
+                                        }
+                                        "Assignment" -> {
+                                            onAddAssignment("", "")
+                                            selectedOption = "Select Block"
+                                        }
+                                        "Array" -> selectedOption = label
+                                    }
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f)
@@ -196,8 +206,8 @@ fun TopMenuPanel(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                selectedOption = addPrintText
-                                expanded = false
+                                onAddPrint()
+                                selectedOption = "Select Block"
                             },
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
