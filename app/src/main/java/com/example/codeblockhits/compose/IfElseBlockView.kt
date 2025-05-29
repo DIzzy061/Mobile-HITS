@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,46 +42,139 @@ fun IfElseBlockView(
     val operatorOptions = listOf("==", "!=", ">", "<", ">=", "<=")
     var operatorMenuExpanded by remember { mutableStateOf(false) }
 
-    var showDialog by remember { mutableStateOf(false) }
-    var dialogTargetThen by remember { mutableStateOf(true) }
+    var showAddBlockDialog by remember { mutableStateOf(false) }
+    var isAddingToThen by remember { mutableStateOf(true) }
+    var showVariableNameDialog by remember { mutableStateOf(false) }
     var newVarName by remember { mutableStateOf("") }
     var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var errorMessageText = stringResource(R.string.variableNameExists)
 
-    if (showDialog) {
-        val duplicate = (if (dialogTargetThen) block.thenBlocks else block.elseBlocks)
-            .filterIsInstance<VariableBlock>()
-            .any { it.name == newVarName }
+    if (showAddBlockDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddBlockDialog = false },
+            title = { Text(stringResource(R.string.addBlock)) },
+            text = {
+                Column {
+                    Text(
+                        text = if (isAddingToThen) stringResource(R.string.addBlockToThen) else stringResource(R.string.addBlockToElse),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            showAddBlockDialog = false
+                            showVariableNameDialog = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🧩 ${stringResource(R.string.variable)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onAddToIfElse(
+                                block.id,
+                                AssignmentBlock(id = nextId, target = "", expression = "0"),
+                                isAddingToThen
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📝 ${stringResource(R.string.addAssignment)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onAddToIfElse(
+                                block.id,
+                                PrintBlock(id = nextId),
+                                isAddingToThen
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🖨️ ${stringResource(R.string.addPrint)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onAddToIfElse(
+                                block.id,
+                                IfElseBlock(id = nextId),
+                                isAddingToThen
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🔀 ${stringResource(R.string.addIfElse)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onAddToIfElse(
+                                block.id,
+                                WhileBlock(id = nextId),
+                                isAddingToThen
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🔄 ${stringResource(R.string.addWhile)}")
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAddBlockDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
+    if (showVariableNameDialog) {
+        val duplicate = if (isAddingToThen) {
+            block.thenBlocks.filterIsInstance<VariableBlock>().any { it.name == newVarName }
+        } else {
+            block.elseBlocks.filterIsInstance<VariableBlock>().any { it.name == newVarName }
+        }
         AlertDialog(
             onDismissRequest = {
-                showDialog = false
+                showVariableNameDialog = false
                 newVarName = ""
             },
             confirmButton = {
                 Button(onClick = {
                     if (duplicate) {
+                        errorMessage = errorMessageText
                         showErrorDialog = true
                     } else {
                         onAddToIfElse(
                             block.id,
                             VariableBlock(id = nextId, name = newVarName, value = "0"),
-                            dialogTargetThen
+                            isAddingToThen
                         )
                         onIdIncrement()
-                        showDialog = false
+                        showVariableNameDialog = false
                         newVarName = ""
                     }
-                }) {
-                    Text(stringResource(R.string.addBlock))
-                }
+                }) { Text(stringResource(R.string.addBlock)) }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showDialog = false
+                    showVariableNameDialog = false
                     newVarName = ""
-                }) {
-                    Text(stringResource(R.string.cancel))
-                }
+                }) { Text(stringResource(R.string.cancel)) }
             },
             title = { Text(stringResource(R.string.variableName)) },
             text = {
@@ -102,7 +196,7 @@ fun IfElseBlockView(
                 }
             },
             title = { Text(stringResource(R.string.error)) },
-            text = { Text(stringResource(R.string.variableExists)) }
+            text = { Text(errorMessage) }
         )
     }
 
@@ -222,15 +316,25 @@ fun IfElseBlockView(
                                 )
                                 is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
                                 is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is IfElseBlock -> IfElseBlockView(
-                                    childBlock,
-                                    updateList,
-                                    removeBlock,
-                                    onAddToIfElse,
-                                    variablesMap,
-                                    nextId,
-                                    onIdIncrement
-                                )
+                                is IfElseBlock -> {
+                                    val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
+                                        val updatedBlock = if (toThen) {
+                                            childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
+                                        } else {
+                                            childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                        }
+                                        updateList(updatedBlock)
+                                    }
+                                    IfElseBlockView(
+                                        childBlock,
+                                        updateList,
+                                        removeBlock,
+                                        localOnAddToIfElse,
+                                        variablesMap,
+                                        nextId,
+                                        onIdIncrement
+                                    )
+                                }
                                 is WhileBlock -> WhileBlockView(
                                     block = childBlock,
                                     onUpdate = updateList,
@@ -241,57 +345,6 @@ fun IfElseBlockView(
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                dialogTargetThen = true
-                                showDialog = true
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addVariable))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), true)
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addAssignment))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(block.id, PrintBlock(id = nextId), true)
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addPrint))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(
-                                    block.id,
-                                    WhileBlock(id = nextId, leftOperand = "1", operator = "!=", rightOperand = "0", innerBlocks = emptyList()),
-                                    true
-                                )
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addWhile))
                         }
                     }
                 }
@@ -348,15 +401,25 @@ fun IfElseBlockView(
                                 )
                                 is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
                                 is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is IfElseBlock -> IfElseBlockView(
-                                    childBlock,
-                                    updateList,
-                                    removeBlock,
-                                    onAddToIfElse,
-                                    variablesMap,
-                                    nextId,
-                                    onIdIncrement
-                                )
+                                is IfElseBlock -> {
+                                    val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
+                                        val updatedBlock = if (toThen) {
+                                            childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
+                                        } else {
+                                            childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                        }
+                                        updateList(updatedBlock)
+                                    }
+                                    IfElseBlockView(
+                                        childBlock,
+                                        updateList,
+                                        removeBlock,
+                                        localOnAddToIfElse,
+                                        variablesMap,
+                                        nextId,
+                                        onIdIncrement
+                                    )
+                                }
                                 is WhileBlock -> WhileBlockView(
                                     block = childBlock,
                                     onUpdate = updateList,
@@ -369,57 +432,40 @@ fun IfElseBlockView(
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
+                }
+            }
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                dialogTargetThen = false
-                                showDialog = true
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addVariable))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(block.id, AssignmentBlock(id = nextId, target = "", expression = ""), false)
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addAssignment))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(block.id, PrintBlock(id = nextId), false)
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addPrint))
-                        }
-
-                        Button(
-                            onClick = {
-                                onAddToIfElse(
-                                    block.id,
-                                    WhileBlock(id = nextId, leftOperand = "1", operator = "!=", rightOperand = "0", innerBlocks = emptyList()),
-                                    false
-                                )
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addWhile))
-                        }
-                    }
+            // Fixed buttons at the bottom
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = {
+                        isAddingToThen = true
+                        showAddBlockDialog = true
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.addBlockToThen))
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Button(
+                    onClick = {
+                        isAddingToThen = false
+                        showAddBlockDialog = true
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.addBlockToElse))
                 }
             }
         }

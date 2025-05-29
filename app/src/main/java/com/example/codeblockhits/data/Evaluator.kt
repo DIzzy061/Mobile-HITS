@@ -2,7 +2,6 @@ package com.example.codeblockhits.data
 
 sealed class VariableValue {
     data class Scalar(val value: String) : VariableValue()
-    data class Array(val values: MutableList<String>) : VariableValue()
 }
 
 data class InterpreterResult(
@@ -31,7 +30,6 @@ fun evaluateExpression(expression: String, variables: Map<String, VariableValue>
     variables.forEach { (name, value) ->
         val replacement = when (value) {
             is VariableValue.Scalar -> value.value
-            is VariableValue.Array -> value.values.joinToString(",")
         }
         processedExpr = processedExpr.replace(name, replacement)
     }
@@ -109,7 +107,6 @@ fun evalRpn(expr: String, variables: Map<String, VariableValue>): RpnResult {
     val tokens = expr.trim().split(" ").filter { it.isNotEmpty() }
     if (tokens.isEmpty()) return RpnResult("", isError = true, errorMessage = "Expression is empty")
 
-    val arrayAccessRegex = Regex("""([a-zA-Z_][a-zA-Z0-9_]*)\[(.+)]""")
     val stack = ArrayDeque<Double>()
 
     for (token in tokens) {
@@ -140,26 +137,8 @@ fun evalRpn(expr: String, variables: Map<String, VariableValue>): RpnResult {
                             ?: return RpnResult("", true, "Invalid number in scalar '$token'")
                         stack.addLast(value)
                     }
-                    is VariableValue.Array -> {
-                        return RpnResult("", true, "Use indexed access for array '$token', e.g. $token[0]")
-                    }
                     null -> return RpnResult("", true, "Variable '$token' not initialized.")
                 }
-            }
-
-            arrayAccessRegex.matches(token) -> {
-                val (name, indexExpr) = arrayAccessRegex.matchEntire(token)!!.destructured
-                val array = variables[name]
-                if (array !is VariableValue.Array) return RpnResult("", true, "'$name' is not an array")
-
-                val indexResult = evalRpn(indexExpr, variables)
-                if (indexResult.isError) return indexResult
-                val index = indexResult.value.toDoubleOrNull()?.toInt()
-                    ?: return RpnResult("", true, "Invalid index '$indexExpr'")
-                if (index !in array.values.indices) return RpnResult("", true, "Index $index out of bounds for '$name'")
-                val value = array.values[index].toDoubleOrNull()
-                    ?: return RpnResult("", true, "Array element '$name[$index]' is not a number")
-                stack.addLast(value)
             }
 
             else -> return RpnResult("", true, "Unknown token '$token'")

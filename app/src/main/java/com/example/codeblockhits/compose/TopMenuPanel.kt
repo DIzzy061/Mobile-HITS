@@ -31,7 +31,11 @@ fun TopMenuPanel(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectBlockText = stringResource(R.string.selectBlock)
-    val addPrintText = stringResource(R.string.addPrint)
+    val variableText = stringResource(R.string.variable)
+    val ifElseText = stringResource(R.string.ifElse)
+    val assignmentText = stringResource(R.string.addAssignment)
+    val whileText = stringResource(R.string.addWhile)
+    val printText = stringResource(R.string.addPrint)
     var selectedOption by remember { mutableStateOf(selectBlockText) }
     var inputText by remember { mutableStateOf("") }
 
@@ -147,7 +151,7 @@ fun TopMenuPanel(
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.addBlock))
+                    Text(stringResource(R.string.addArrow))
                 }
             }
         }
@@ -170,24 +174,27 @@ fun TopMenuPanel(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
-                            stringResource(R.string.variable),
-                            stringResource(R.string.ifElse),
-                            stringResource(R.string.addAssignment),
-                            stringResource(R.string.addWhile)
+                            variableText,
+                            ifElseText,
+                            assignmentText,
+                            whileText
                         ).forEach { label ->
                             OutlinedButton(
                                 onClick = {
                                     when (label) {
-                                        "Variable" -> selectedOption = label
-                                        "If/Else" -> {
+                                        variableText -> selectedOption = label
+                                        ifElseText -> {
                                             onAddIfElse()
-                                            selectedOption = "Select Block"
+                                            selectedOption = selectBlockText
                                         }
-                                        "Assignment" -> {
+                                        assignmentText -> {
                                             onAddAssignment("", "")
-                                            selectedOption = "Select Block"
+                                            selectedOption = selectBlockText
                                         }
-                                        "Array" -> selectedOption = label
+                                        whileText -> {
+                                            onAddWhile()
+                                            selectedOption = selectBlockText
+                                        }
                                     }
                                 },
                                 shape = RoundedCornerShape(8.dp),
@@ -207,12 +214,12 @@ fun TopMenuPanel(
                         OutlinedButton(
                             onClick = {
                                 onAddPrint()
-                                selectedOption = "Select Block"
+                                selectedOption = selectBlockText
                             },
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(stringResource(R.string.addPrint))
+                            Text(printText)
                         }
 
                         OutlinedButton(

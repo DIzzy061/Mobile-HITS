@@ -69,7 +69,7 @@ fun VariableBlockView(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 OutlinedTextField(
                     value = block.value,
@@ -92,12 +92,6 @@ fun VariableBlockView(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                Button(
-                    onClick = { onValueChange(computedValue) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.calculateNow))
-                }
             }
         }
     }

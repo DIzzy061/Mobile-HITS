@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,9 +38,12 @@ fun WhileBlockView(
     val operatorOptions = listOf("==", "!=", ">", "<", ">=", "<=")
     var operatorMenuExpanded by remember { mutableStateOf(false) }
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddBlockDialog by remember { mutableStateOf(false) }
+    var showVariableNameDialog by remember { mutableStateOf(false) }
     var newVarName by remember { mutableStateOf("") }
     var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var errorMassegeText = stringResource(R.string.variableNameExists)
 
     fun updateCondition() {
         onUpdate(block.copy(
@@ -49,25 +53,107 @@ fun WhileBlockView(
         ))
     }
 
-    if (showErrorDialog) {
+    if (showAddBlockDialog) {
         AlertDialog(
-            onDismissRequest = { showErrorDialog = false },
-            confirmButton = { Button(onClick = { showErrorDialog = false }) { Text(stringResource(R.string.ok)) } },
-            title = { Text(stringResource(R.string.error)) },
-            text = { Text(stringResource(R.string.variableExists)) }
+            onDismissRequest = { showAddBlockDialog = false },
+            title = { Text(stringResource(R.string.addBlock)) },
+            text = {
+                Column {
+                    Button(
+                        onClick = {
+                            showAddBlockDialog = false
+                            showVariableNameDialog = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🧩 ${stringResource(R.string.variable)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onUpdate(
+                                block.copy(
+                                    innerBlocks = block.innerBlocks + AssignmentBlock(
+                                        id = nextId,
+                                        target = "",
+                                        expression = "0"
+                                    )
+                                )
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("📝 ${stringResource(R.string.addAssignment)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onUpdate(
+                                block.copy(
+                                    innerBlocks = block.innerBlocks + PrintBlock(id = nextId)
+                                )
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🖨️ ${stringResource(R.string.addPrint)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onUpdate(
+                                block.copy(
+                                    innerBlocks = block.innerBlocks + IfElseBlock(id = nextId)
+                                )
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🔀 ${stringResource(R.string.addIfElse)}")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            onUpdate(
+                                block.copy(
+                                    innerBlocks = block.innerBlocks + WhileBlock(id = nextId)
+                                )
+                            )
+                            onIdIncrement()
+                            showAddBlockDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("🔄 ${stringResource(R.string.addWhile)}")
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAddBlockDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 
-    if (showDialog) {
+    if (showVariableNameDialog) {
         val duplicate = block.innerBlocks.filterIsInstance<VariableBlock>().any { it.name == newVarName }
         AlertDialog(
             onDismissRequest = {
-                showDialog = false
+                showVariableNameDialog = false
                 newVarName = ""
             },
             confirmButton = {
                 Button(onClick = {
                     if (duplicate) {
+                        errorMessage = errorMassegeText
                         showErrorDialog = true
                     } else {
                         onUpdate(
@@ -80,14 +166,14 @@ fun WhileBlockView(
                             )
                         )
                         onIdIncrement()
-                        showDialog = false
+                        showVariableNameDialog = false
                         newVarName = ""
                     }
                 }) { Text(stringResource(R.string.addBlock)) }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showDialog = false
+                    showVariableNameDialog = false
                     newVarName = ""
                 }) { Text(stringResource(R.string.cancel)) }
             },
@@ -99,6 +185,19 @@ fun WhileBlockView(
                     label = { Text(stringResource(R.string.variableName)) }
                 )
             }
+        )
+    }
+
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                Button(onClick = { showErrorDialog = false }) {
+                    Text(stringResource(R.string.ok))
+                }
+            },
+            title = { Text(stringResource(R.string.error)) },
+            text = { Text(errorMessage) }
         )
     }
 
@@ -248,61 +347,19 @@ fun WhileBlockView(
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, top = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Button(
-                            onClick = { showDialog = true },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addVariable))
-                        }
-
-                        Button(
-                            onClick = {
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks + AssignmentBlock(nextId, "", "")))
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addAssignment))
-                        }
-
-                        Button(
-                            onClick = {
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks + PrintBlock(nextId)))
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addPrint))
-                        }
-
-                        Button(
-                            onClick = {
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks + IfElseBlock(nextId)))
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addIfElse))
-                        }
-
-                        Button(
-                            onClick = {
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks + WhileBlock(nextId)))
-                                onIdIncrement()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.addWhile))
-                        }
-                    }
                 }
+            }
+
+            // Fixed button at the bottom
+            Button(
+                onClick = { showAddBlockDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.addBlock))
             }
         }
     }
