@@ -35,7 +35,8 @@ fun evaluateExpression(expression: String, variables: Map<String, VariableValue>
     }
 
     return try {
-        evaluateMathExpression(processedExpr).toString()
+        val result = evaluateMathExpression(processedExpr)
+        if (result % 1 == 0.0) result.toInt().toString() else result.toString()
     } catch (e: Exception) {
         "Error: ${e.message}"
     }
@@ -214,7 +215,7 @@ fun interpretBlocksRPN(
                 }
                 is WhileBlock -> {
                     val inner = linkBlocksSequentially(block.innerBlocks)
-                    var safeguard = 1000
+                    var safeguard = 10000
                     while (safeguard-- > 0) {
                         val left = evalRpn(block.leftOperand, variables)
                         val right = evalRpn(block.rightOperand, variables)

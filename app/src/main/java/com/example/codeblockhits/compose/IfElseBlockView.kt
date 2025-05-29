@@ -285,66 +285,86 @@ fun IfElseBlockView(
             }
 
             AnimatedVisibility(visible = showThenBlocks) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 500.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .padding(start = 16.dp)
+                    Column(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        items(block.thenBlocks) { childBlock ->
-                            val updateList = { updated: CodeBlock ->
-                                val newList = block.thenBlocks.map { if (it.id == updated.id) updated else it }
-                                onUpdate(block.copy(thenBlocks = newList))
-                            }
-                            val removeBlock = {
-                                val newList = block.thenBlocks.filter { it.id != childBlock.id }
-                                onUpdate(block.copy(thenBlocks = newList))
-                            }
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(start = 16.dp)
+                        ) {
+                            items(block.thenBlocks) { childBlock ->
+                                val updateList = { updated: CodeBlock ->
+                                    val newList = block.thenBlocks.map { if (it.id == updated.id) updated else it }
+                                    onUpdate(block.copy(thenBlocks = newList))
+                                }
+                                val removeBlock = {
+                                    val newList = block.thenBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(thenBlocks = newList))
+                                }
 
-                            when (childBlock) {
-                                is VariableBlock -> VariableBlockView(
-                                    block = childBlock,
-                                    onValueChange = { newValue ->
-                                        val updated = childBlock.copy(value = newValue)
-                                        updateList(updated)
-                                    },
-                                    onRemove = removeBlock,
-                                    variablesMap = variablesMap
-                                )
-                                is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is IfElseBlock -> {
-                                    val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
-                                        val updatedBlock = if (toThen) {
-                                            childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
-                                        } else {
-                                            childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                when (childBlock) {
+                                    is VariableBlock -> VariableBlockView(
+                                        block = childBlock,
+                                        onValueChange = { newValue ->
+                                            val updated = childBlock.copy(value = newValue)
+                                            updateList(updated)
+                                        },
+                                        onRemove = removeBlock,
+                                        variablesMap = variablesMap
+                                    )
+                                    is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
+                                    is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
+                                    is IfElseBlock -> {
+                                        val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
+                                            val updatedBlock = if (toThen) {
+                                                childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
+                                            } else {
+                                                childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                            }
+                                            updateList(updatedBlock)
                                         }
-                                        updateList(updatedBlock)
+                                        IfElseBlockView(
+                                            childBlock,
+                                            updateList,
+                                            removeBlock,
+                                            localOnAddToIfElse,
+                                            variablesMap,
+                                            nextId,
+                                            onIdIncrement
+                                        )
                                     }
-                                    IfElseBlockView(
-                                        childBlock,
-                                        updateList,
-                                        removeBlock,
-                                        localOnAddToIfElse,
-                                        variablesMap,
-                                        nextId,
-                                        onIdIncrement
+                                    is WhileBlock -> WhileBlockView(
+                                        block = childBlock,
+                                        onUpdate = updateList,
+                                        onRemove = removeBlock,
+                                        variablesMap = variablesMap,
+                                        nextId = nextId,
+                                        onIdIncrement = onIdIncrement
                                     )
                                 }
-                                is WhileBlock -> WhileBlockView(
-                                    block = childBlock,
-                                    onUpdate = updateList,
-                                    onRemove = removeBlock,
-                                    variablesMap = variablesMap,
-                                    nextId = nextId,
-                                    onIdIncrement = onIdIncrement
-                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        
+                        Button(
+                            onClick = {
+                                isAddingToThen = true
+                                showAddBlockDialog = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.addBlockToThen))
                         }
                     }
                 }
@@ -370,102 +390,88 @@ fun IfElseBlockView(
             }
 
             AnimatedVisibility(visible = showElseBlocks) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 500.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .padding(start = 16.dp)
+                    Column(
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        items(block.elseBlocks) { childBlock ->
-                            val updateList = { updated: CodeBlock ->
-                                val newList = block.elseBlocks.map { if (it.id == updated.id) updated else it }
-                                onUpdate(block.copy(elseBlocks = newList))
-                            }
-                            val removeBlock = {
-                                val newList = block.elseBlocks.filter { it.id != childBlock.id }
-                                onUpdate(block.copy(elseBlocks = newList))
-                            }
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(start = 16.dp)
+                        ) {
+                            items(block.elseBlocks) { childBlock ->
+                                val updateList = { updated: CodeBlock ->
+                                    val newList = block.elseBlocks.map { if (it.id == updated.id) updated else it }
+                                    onUpdate(block.copy(elseBlocks = newList))
+                                }
+                                val removeBlock = {
+                                    val newList = block.elseBlocks.filter { it.id != childBlock.id }
+                                    onUpdate(block.copy(elseBlocks = newList))
+                                }
 
-                            when (childBlock) {
-                                is VariableBlock -> VariableBlockView(
-                                    block = childBlock,
-                                    onValueChange = { newValue ->
-                                        val updated = childBlock.copy(value = newValue)
-                                        updateList(updated)
-                                    },
-                                    onRemove = removeBlock,
-                                    variablesMap = variablesMap
-                                )
-                                is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                is IfElseBlock -> {
-                                    val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
-                                        val updatedBlock = if (toThen) {
-                                            childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
-                                        } else {
-                                            childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                when (childBlock) {
+                                    is VariableBlock -> VariableBlockView(
+                                        block = childBlock,
+                                        onValueChange = { newValue ->
+                                            val updated = childBlock.copy(value = newValue)
+                                            updateList(updated)
+                                        },
+                                        onRemove = removeBlock,
+                                        variablesMap = variablesMap
+                                    )
+                                    is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
+                                    is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
+                                    is IfElseBlock -> {
+                                        val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
+                                            val updatedBlock = if (toThen) {
+                                                childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
+                                            } else {
+                                                childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                                            }
+                                            updateList(updatedBlock)
                                         }
-                                        updateList(updatedBlock)
+                                        IfElseBlockView(
+                                            childBlock,
+                                            updateList,
+                                            removeBlock,
+                                            localOnAddToIfElse,
+                                            variablesMap,
+                                            nextId,
+                                            onIdIncrement
+                                        )
                                     }
-                                    IfElseBlockView(
-                                        childBlock,
-                                        updateList,
-                                        removeBlock,
-                                        localOnAddToIfElse,
-                                        variablesMap,
-                                        nextId,
-                                        onIdIncrement
+                                    is WhileBlock -> WhileBlockView(
+                                        block = childBlock,
+                                        onUpdate = updateList,
+                                        onRemove = removeBlock,
+                                        variablesMap = variablesMap,
+                                        nextId = nextId,
+                                        onIdIncrement = onIdIncrement
                                     )
                                 }
-                                is WhileBlock -> WhileBlockView(
-                                    block = childBlock,
-                                    onUpdate = updateList,
-                                    onRemove = removeBlock,
-                                    variablesMap = variablesMap,
-                                    nextId = nextId,
-                                    onIdIncrement = onIdIncrement
-                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        
+                        Button(
+                            onClick = {
+                                isAddingToThen = false
+                                showAddBlockDialog = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.addBlockToElse))
                         }
                     }
-                }
-            }
-
-            // Fixed buttons at the bottom
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = {
-                        isAddingToThen = true
-                        showAddBlockDialog = true
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.addBlockToThen))
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                Button(
-                    onClick = {
-                        isAddingToThen = false
-                        showAddBlockDialog = true
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.addBlockToElse))
                 }
             }
         }
