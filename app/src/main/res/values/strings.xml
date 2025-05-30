@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="appName">CodeBlockHITS</string>
+    <string name="appName">CodeBlock</string>
     <string name="selectBlock">Select block:</string>
     <string name="addBlock">Add block</string>
     <string name="addVariable">Variable</string>
