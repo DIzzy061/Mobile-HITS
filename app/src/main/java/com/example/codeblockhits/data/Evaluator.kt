@@ -1,5 +1,6 @@
 package com.example.codeblockhits.data
 
+
 sealed class VariableValue {
     data class Scalar(val value: String) : VariableValue()
 }
@@ -9,8 +10,6 @@ data class InterpreterResult(
     val variables: Map<String, VariableValue>,
     val errorBlockId: Int? = null
 )
-
-data class RpnResult(val value: String, val isError: Boolean = false, val errorMessage: String = "")
 
 private fun linkBlocksSequentially(blocks: List<CodeBlock>): List<CodeBlock> {
     return blocks.mapIndexed { index, block ->
@@ -71,7 +70,9 @@ fun evaluateMathExpression(expression: String): Double {
         stack.add(result)
     }
 
-    for (token in tokens) {
+    var i = 0
+    while (i < tokens.size) {
+        val token = tokens[i]
         when {
             token.matches(Regex("-?\\d+(\\.\\d+)?")) -> stack.add(token.toDouble())
             token == "(" -> operators.add(token)
@@ -83,6 +84,23 @@ fun evaluateMathExpression(expression: String): Double {
                     throw RuntimeException("Mismatched parentheses")
                 }
                 operators.removeAt(operators.lastIndex)
+            }
+
+            token == "-" && (i == 0 || tokens[i - 1] == "(" || tokens[i - 1] in setOf(
+                "+",
+                "-",
+                "*",
+                "/",
+                "%",
+                "^"
+            )) -> {
+
+                if (i + 1 < tokens.size && tokens[i + 1].matches(Regex("\\d+(\\.\\d+)?"))) {
+                    stack.add(-tokens[i + 1].toDouble())
+                    i++
+                } else {
+                    operators.add("u-")
+                }
             }
 
             token in setOf("+", "-", "*", "/", "%", "^") -> {
@@ -97,69 +115,26 @@ fun evaluateMathExpression(expression: String): Double {
 
             else -> throw RuntimeException("Invalid token: '$token'")
         }
+        i++
     }
 
     while (operators.isNotEmpty()) {
         if (operators.last() == "(") throw RuntimeException("Mismatched parentheses")
-        applyOperator(operators.removeAt(operators.lastIndex))
+        if (operators.last() == "u-") {
+            if (stack.isEmpty()) throw RuntimeException("Not enough operands for unary minus")
+            val a = stack.removeAt(stack.lastIndex)
+            stack.add(-a)
+            operators.removeAt(operators.lastIndex)
+        } else {
+            applyOperator(operators.removeAt(operators.lastIndex))
+        }
     }
 
     if (stack.size != 1) throw RuntimeException("Invalid expression")
     return stack[0]
 }
 
-fun evalRpn(expr: String, variables: Map<String, VariableValue>): RpnResult {
-    val tokens = expr.trim().split(" ").filter { it.isNotEmpty() }
-    if (tokens.isEmpty()) return RpnResult("", isError = true, errorMessage = "Expression is empty")
-
-    val stack = ArrayDeque<Double>()
-
-    for (token in tokens) {
-        when {
-            token.toDoubleOrNull() != null -> stack.addLast(token.toDouble())
-
-            token in setOf("+", "-", "*", "/", "%", "^") -> {
-                if (stack.size < 2) return RpnResult(
-                    "",
-                    true,
-                    "Not enough operands for operator '$token'"
-                )
-                val b = stack.removeLast()
-                val a = stack.removeLast()
-                val res = when (token) {
-                    "+" -> a + b
-                    "-" -> a - b
-                    "*" -> a * b
-                    "/" -> if (b == 0.0) return RpnResult("", true, "Division by zero") else a / b
-                    "%" -> if (b == 0.0) return RpnResult("", true, "Modulo by zero") else a % b
-                    "^" -> Math.pow(a, b)
-                    else -> return RpnResult("", true, "Unknown operator '$token'")
-                }
-                stack.addLast(res)
-            }
-
-            variables.containsKey(token) -> {
-                val variable = variables[token]
-                when (variable) {
-                    is VariableValue.Scalar -> {
-                        val value = variable.value.toDoubleOrNull()
-                            ?: return RpnResult("", true, "Invalid number in scalar '$token'")
-                        stack.addLast(value)
-                    }
-
-                    null -> return RpnResult("", true, "Variable '$token' not initialized.")
-                }
-            }
-
-            else -> return RpnResult("", true, "Unknown token '$token'")
-        }
-    }
-
-    return if (stack.size == 1) RpnResult(stack.last().toString())
-    else RpnResult("", true, "Malformed RPN expression. Stack: $stack")
-}
-
-fun interpretBlocksRPN(
+fun interpreterBlocks(
     blocks: List<CodeBlock>,
     startBlockId: Int? = null,
     variables: MutableMap<String, VariableValue> = mutableMapOf()
@@ -225,17 +200,21 @@ fun interpretBlocksRPN(
                 }
 
                 is IfElseBlock -> {
-                    val left = evalRpn(block.leftOperand, variables)
-                    val right = evalRpn(block.rightOperand, variables)
-                    if (left.isError || right.isError) {
+                    val left = evaluateExpression(block.leftOperand, variables)
+                    val right = evaluateExpression(block.rightOperand, variables)
+                    if (left.startsWith("Error:") || right.startsWith("Error:")) {
                         return InterpreterResult(
-                            output + "Error in If: ${left.errorMessage} ${right.errorMessage}".trim(),
+                            output + "Error in If: ${left.removePrefix("Error: ")} ${
+                                right.removePrefix(
+                                    "Error: "
+                                )
+                            }".trim(),
                             variables,
                             block.id
                         )
                     }
-                    val l = left.value.toDoubleOrNull()
-                    val r = right.value.toDoubleOrNull()
+                    val l = left.toDoubleOrNull()
+                    val r = right.toDoubleOrNull()
                     if (l == null || r == null) return InterpreterResult(
                         output + "Error in If: operands must be numeric",
                         variables,
@@ -250,7 +229,7 @@ fun interpretBlocksRPN(
                     val inner =
                         linkBlocksSequentially(if (condition) block.thenBlocks else block.elseBlocks)
                     val result =
-                        interpretBlocksRPN(inner, inner.firstOrNull()?.id, variables.toMutableMap())
+                        interpreterBlocks(inner, inner.firstOrNull()?.id, variables.toMutableMap())
                     output.addAll(result.output)
                     if (result.errorBlockId != null) return result
                     variables.putAll(result.variables)
@@ -260,17 +239,21 @@ fun interpretBlocksRPN(
                     val inner = linkBlocksSequentially(block.innerBlocks)
                     var safeguard = 10000
                     while (safeguard-- > 0) {
-                        val left = evalRpn(block.leftOperand, variables)
-                        val right = evalRpn(block.rightOperand, variables)
-                        if (left.isError || right.isError) {
+                        val left = evaluateExpression(block.leftOperand, variables)
+                        val right = evaluateExpression(block.rightOperand, variables)
+                        if (left.startsWith("Error:") || right.startsWith("Error:")) {
                             return InterpreterResult(
-                                output + "Error in While: ${left.errorMessage} ${right.errorMessage}".trim(),
+                                output + "Error in While: ${left.removePrefix("Error: ")} ${
+                                    right.removePrefix(
+                                        "Error: "
+                                    )
+                                }".trim(),
                                 variables,
                                 block.id
                             )
                         }
-                        val l = left.value.toDoubleOrNull()
-                        val r = right.value.toDoubleOrNull()
+                        val l = left.toDoubleOrNull()
+                        val r = right.toDoubleOrNull()
                         if (l == null || r == null) return InterpreterResult(
                             output + "Error in While: operands must be numeric",
                             variables,
@@ -283,7 +266,7 @@ fun interpretBlocksRPN(
                             else -> false
                         }
                         if (!condition) break
-                        val result = interpretBlocksRPN(
+                        val result = interpreterBlocks(
                             inner,
                             inner.firstOrNull()?.id,
                             variables.toMutableMap()

@@ -33,7 +33,7 @@ fun MainScreen() {
     var selectedSourceBlockId by remember { mutableStateOf<Int?>(null) }
 
     val errorMessage = stringResource(R.string.error)
-    val successMessage = stringResource(R.string.calculate)
+    val successMessage = stringResource(R.string.programOutput)
     val variableExistsMessage = stringResource(R.string.variableExists)
 
     fun getVariablesMap(): Map<String, VariableValue> {
@@ -45,7 +45,7 @@ fun MainScreen() {
 
     fun evaluateAllBlocks() {
         erroredBlockId = null
-        val result = interpretBlocksRPN(
+        val result = interpreterBlocks(
             blocks = blocks.toMutableList(),
             startBlockId = blocks.firstOrNull()?.id,
             variables = getVariablesMap().toMutableMap()
@@ -103,13 +103,17 @@ fun MainScreen() {
                     blocks = blocks + IfElseBlock(id = nextId++)
                 },
                 onAddAssignment = { target, expression ->
-                    blocks = blocks + AssignmentBlock(id = nextId++, target = target, expression = expression)
+                    blocks = blocks + AssignmentBlock(
+                        id = nextId++,
+                        target = target,
+                        expression = expression
+                    )
                 },
                 onAddPrint = {
                     blocks = blocks + PrintBlock(id = nextId++)
                 },
                 onAddWhile = {
-                    blocks = blocks + WhileBlock(id = nextId++,)
+                    blocks = blocks + WhileBlock(id = nextId++)
                 },
                 onEvaluateAll = { evaluateAllBlocks() },
                 onArrowMode = {
@@ -165,7 +169,8 @@ fun MainScreen() {
 
                             updatedBlocks = updatedBlocks.map {
                                 if (it.nextBlockId == removedId) {
-                                    val newNextId = if (it.id == targetOfRemovedBlockId) null else targetOfRemovedBlockId
+                                    val newNextId =
+                                        if (it.id == targetOfRemovedBlockId) null else targetOfRemovedBlockId
                                     when (it) {
                                         is VariableBlock -> it.copy(nextBlockId = newNextId)
                                         is AssignmentBlock -> it.copy(nextBlockId = newNextId)
@@ -179,7 +184,9 @@ fun MainScreen() {
                             }
                             blocks = updatedBlocks
                         },
-                        onUpdate = { updated -> blocks = blocks.map { if (it.id == updated.id) updated else it } },
+                        onUpdate = { updated ->
+                            blocks = blocks.map { if (it.id == updated.id) updated else it }
+                        },
                         onAddToIfElse = { parentId, block, isThenBlock ->
                             blocks = blocks.map {
                                 if (it.id == parentId && it is IfElseBlock) {

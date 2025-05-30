@@ -55,11 +55,13 @@ fun CodeBlocksList(
     val arrowColor = MaterialTheme.colorScheme.outline
     val errorHighlightColor = MaterialTheme.colorScheme.error
 
-    Box(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()) {
         blocks.forEach { block ->
             val sourceOffset = blockOffsets[block.id]
             val sourceSize = blockSizes[block.id]
-            
+
             val targetId = block.nextBlockId
             val targetOffset = targetId?.let { blockOffsets[it] }
             val targetSize = targetId?.let { blockSizes[it] }
@@ -88,7 +90,8 @@ fun CodeBlocksList(
                             onDragStart = { draggingBlockId = block.id },
                             onDragEnd = { draggingBlockId = null },
                             onDrag = { _, dragAmount ->
-                                val current = blockOffsets[block.id] ?: Offset(100f, 100f + index * 200f)
+                                val current =
+                                    blockOffsets[block.id] ?: Offset(100f, 100f + index * 200f)
                                 blockOffsets[block.id] = current + dragAmount
                             }
                         )
@@ -96,7 +99,8 @@ fun CodeBlocksList(
                     .onGloballyPositioned { layoutCoordinates: LayoutCoordinates ->
                         val size = layoutCoordinates.size
                         val position = layoutCoordinates.positionInRoot()
-                        blockCenters[block.id] = position + Offset(size.width / 2f, size.height / 2f)
+                        blockCenters[block.id] =
+                            position + Offset(size.width / 2f, size.height / 2f)
                         blockSizes[block.id] = Size(size.width.toFloat(), size.height.toFloat())
                     }
                     .then(
@@ -121,8 +125,14 @@ fun CodeBlocksList(
                     .background(
                         when {
                             erroredBlockId == block.id -> errorHighlightColor.copy(alpha = 0.3f)
-                            draggingBlockId == block.id -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                            isArrowMode && selectedSourceBlockId == block.id -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                            draggingBlockId == block.id -> MaterialTheme.colorScheme.secondary.copy(
+                                alpha = 0.3f
+                            )
+
+                            isArrowMode && selectedSourceBlockId == block.id -> MaterialTheme.colorScheme.tertiaryContainer.copy(
+                                alpha = 0.5f
+                            )
+
                             else -> Color.Transparent
                         }
                     )
@@ -144,12 +154,28 @@ fun CodeBlocksList(
                     )
 
 
-                    is AssignmentBlock -> AssignmentBlockView(block, onUpdate, { onRemove(block.id) }, variablesMap)
+                    is AssignmentBlock -> AssignmentBlockView(
+                        block,
+                        onUpdate,
+                        { onRemove(block.id) },
+                        variablesMap
+                    )
 
-                    is PrintBlock -> PrintBlockView(block, onUpdate, { onRemove(block.id) }, variablesMap)
+                    is PrintBlock -> PrintBlockView(
+                        block,
+                        onUpdate,
+                        { onRemove(block.id) },
+                        variablesMap
+                    )
 
                     is IfElseBlock -> IfElseBlockView(
-                        block, onUpdate, { onRemove(block.id) }, onAddToIfElse, variablesMap, nextId, onIdIncrement
+                        block,
+                        onUpdate,
+                        { onRemove(block.id) },
+                        onAddToIfElse,
+                        variablesMap,
+                        nextId,
+                        onIdIncrement
                     )
 
                     is WhileBlock -> WhileBlockView(

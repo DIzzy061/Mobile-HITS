@@ -1,4 +1,5 @@
 package com.example.codeblockhits.compose
+
 import com.example.codeblockhits.data.VariableValue
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -146,7 +147,11 @@ fun PrintBlockView(
                 if (computedValues.any { it.isNotEmpty() }) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "${stringResource(R.string.calculateNow)}: ${computedValues.joinToString(", ")}",
+                        text = "${stringResource(R.string.programOutput)}: ${
+                            computedValues.joinToString(
+                                ", "
+                            )
+                        }",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )

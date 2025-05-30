@@ -35,8 +35,10 @@ fun DrawBlockConnectionArrow(
     targetBlockSize: Size,
     color: Color
 ) {
-    val sourceCenter = sourceBlockOffset + Offset(sourceBlockSize.width / 2f, sourceBlockSize.height / 2f)
-    val targetCenter = targetBlockOffset + Offset(targetBlockSize.width / 2f, targetBlockSize.height / 2f)
+    val sourceCenter =
+        sourceBlockOffset + Offset(sourceBlockSize.width / 2f, sourceBlockSize.height / 2f)
+    val targetCenter =
+        targetBlockOffset + Offset(targetBlockSize.width / 2f, targetBlockSize.height / 2f)
 
     val startPoint = getRectEdgeIntersection(sourceCenter, targetCenter, sourceBlockSize)
     val endPoint = getRectEdgeIntersection(targetCenter, sourceCenter, targetBlockSize)
@@ -53,7 +55,8 @@ fun DrawBlockConnectionArrow(
 
         val arrowHeadLength = 24f
         val arrowHeadAngle = 28f
-        val angle = atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x) * 180f / PI.toFloat()
+        val angle =
+            atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x) * 180f / PI.toFloat()
 
         rotate(degrees = angle, pivot = endPoint) {
             val path = Path().apply {

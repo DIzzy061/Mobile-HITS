@@ -31,7 +31,7 @@ fun OutputDialog(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.calculate),
+                    text = stringResource(R.string.programOutput),
                     style = MaterialTheme.typography.titleLarge
                 )
 

@@ -44,14 +44,16 @@ fun WhileBlockView(
     var newVarName by remember { mutableStateOf("") }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-    var errorMassegeText = stringResource(R.string.variableNameExists)
+    var errorMassegeText = stringResource(R.string.variableExists)
 
     fun updateCondition() {
-        onUpdate(block.copy(
-            leftOperand = leftOperand,
-            operator = operator,
-            rightOperand = rightOperand
-        ))
+        onUpdate(
+            block.copy(
+                leftOperand = leftOperand,
+                operator = operator,
+                rightOperand = rightOperand
+            )
+        )
     }
 
     if (showAddBlockDialog) {
@@ -72,7 +74,7 @@ fun WhileBlockView(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("🧩 ${stringResource(R.string.variable)}")
+                        Text("🧩 ${stringResource(R.string.addVariable)}")
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
@@ -170,7 +172,8 @@ fun WhileBlockView(
     }
 
     if (showVariableNameDialog) {
-        val duplicate = block.innerBlocks.filterIsInstance<VariableBlock>().any { it.name == newVarName }
+        val duplicate =
+            block.innerBlocks.filterIsInstance<VariableBlock>().any { it.name == newVarName }
         AlertDialog(
             onDismissRequest = {
                 showVariableNameDialog = false
@@ -337,27 +340,32 @@ fun WhileBlockView(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${stringResource(R.string.loopBody)} (${block.innerBlocks.size})",
+                    Text(
+                        "${stringResource(R.string.loopBody)} (${block.innerBlocks.size})",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                     IconButton(onClick = { showInnerBlocks = !showInnerBlocks }) {
                         Icon(
                             if (showInnerBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (showInnerBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                            contentDescription = if (showInnerBlocks) stringResource(R.string.hideBlocks) else stringResource(
+                                R.string.showBlocks
+                            )
                         )
                     }
                 }
 
                 AnimatedVisibility(visible = showInnerBlocks) {
                     Column(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 400.dp)
+                            .padding(start = 16.dp)
                     ) {
                         LazyColumn(
                             modifier = Modifier
+                                .weight(1f)
                                 .fillMaxWidth()
-                                .heightIn(max = 400.dp)
-                                .padding(start = 16.dp)
                         ) {
                             items(block.innerBlocks) { child ->
                                 val updateInner = { updated: CodeBlock ->
@@ -378,55 +386,74 @@ fun WhileBlockView(
                                         onRemove = removeInner,
                                         variablesMap = variablesMap
                                     )
-                                    is AssignmentBlock -> AssignmentBlockView(child, updateInner, removeInner, variablesMap)
-                                    is PrintBlock -> PrintBlockView(child, updateInner, removeInner, variablesMap)
+
+                                    is AssignmentBlock -> AssignmentBlockView(
+                                        child,
+                                        updateInner,
+                                        removeInner,
+                                        variablesMap
+                                    )
+
+                                    is PrintBlock -> PrintBlockView(
+                                        child,
+                                        updateInner,
+                                        removeInner,
+                                        variablesMap
+                                    )
+
                                     is IfElseBlock -> IfElseBlockView(
                                         child,
                                         updateInner,
                                         removeInner,
                                         { parentId, newBlock, isThen ->
-                                            val targetList = if (isThen) child.thenBlocks else child.elseBlocks
-                                            val updatedInnerBlocks = targetList + newBlock
-                                            val updatedChild = if (isThen) {
-                                                child.copy(thenBlocks = updatedInnerBlocks)
+                                            val updatedInner = if (isThen) {
+                                                child.thenBlocks + newBlock
                                             } else {
-                                                child.copy(elseBlocks = updatedInnerBlocks)
+                                                child.elseBlocks + newBlock
                                             }
-                                            updateInner(updatedChild)
+                                            updateInner(
+                                                child.copy(
+                                                    thenBlocks = if (isThen) updatedInner else child.thenBlocks,
+                                                    elseBlocks = if (!isThen) updatedInner else child.elseBlocks
+                                                )
+                                            )
                                         },
                                         variablesMap,
                                         nextId,
                                         onIdIncrement
                                     )
+
                                     is WhileBlock -> WhileBlockView(
-                                        child,
-                                        updateInner,
-                                        removeInner,
-                                        variablesMap,
-                                        nextId,
-                                        onIdIncrement
+                                        block = child,
+                                        onUpdate = updateInner,
+                                        onRemove = removeInner,
+                                        variablesMap = variablesMap,
+                                        nextId = nextId,
+                                        onIdIncrement = onIdIncrement
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
-                    }
-                }
 
-                Button(
-                    onClick = { showAddBlockDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.addBlock))
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = { showAddBlockDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.addBlock))
+                        }
+                    }
                 }
             }
         }

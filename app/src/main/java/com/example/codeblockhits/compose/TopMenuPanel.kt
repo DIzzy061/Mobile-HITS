@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
@@ -35,33 +36,19 @@ fun TopMenuPanel(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectBlockText = stringResource(R.string.selectBlock)
-    val variableText = stringResource(R.string.variable)
-    val ifElseText = stringResource(R.string.ifElse)
+    val variableText = stringResource(R.string.addVariable)
+    val ifElseText = stringResource(R.string.addIfElse)
     val assignmentText = stringResource(R.string.addAssignment)
     val whileText = stringResource(R.string.addWhile)
     val printText = stringResource(R.string.addPrint)
     var selectedOption by remember { mutableStateOf(selectBlockText) }
     var inputText by remember { mutableStateOf("") }
 
-    val isDarkTheme = isSystemInDarkTheme()
-
     val headerBackgroundColor = MaterialTheme.colorScheme.primaryContainer
 
     val headerTextColor = MaterialTheme.colorScheme.onPrimaryContainer
 
     val menuBackgroundColor = MaterialTheme.colorScheme.surface
-
-    val fabColor = MaterialTheme.colorScheme.tertiary
-
-    val fabContentColor = MaterialTheme.colorScheme.onTertiary
-
-    val evaluateButtonColor = MaterialTheme.colorScheme.primary
-
-    val evaluateButtonContentColor = MaterialTheme.colorScheme.onPrimary
-
-    val arrowButtonColor = MaterialTheme.colorScheme.secondary
-
-    val arrowButtonContentColor = MaterialTheme.colorScheme.onSecondary
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Surface(
@@ -93,22 +80,29 @@ fun TopMenuPanel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ExtendedFloatingActionButton(
+                Button(
                     onClick = { expanded = !expanded },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
                     shape = RoundedCornerShape(12.dp),
-                    icon = {
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = null
-                        )
-                    },
-                    text = { Text(stringResource(R.string.addBlock)) }
-                )
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.addBlock))
+                }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
@@ -119,7 +113,10 @@ fun TopMenuPanel(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
                     Icon(
                         Icons.Default.PlayArrow,
@@ -127,7 +124,7 @@ fun TopMenuPanel(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.calculate))
+                    Text(stringResource(R.string.startProgram))
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -139,7 +136,10 @@ fun TopMenuPanel(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
                     Icon(
                         Icons.Default.PlayArrow,
@@ -147,7 +147,7 @@ fun TopMenuPanel(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.addArrow))
+                    Text(stringResource(R.string.connect))
                 }
             }
         }
@@ -190,10 +190,12 @@ fun TopMenuPanel(
                                             onAddIfElse()
                                             selectedOption = selectBlockText
                                         }
+
                                         printText -> {
                                             onAddPrint()
                                             selectedOption = selectBlockText
                                         }
+
                                         whileText -> {
                                             onAddWhile()
                                             selectedOption = selectBlockText
@@ -248,21 +250,31 @@ fun TopMenuPanel(
                                 .defaultMinSize(minHeight = 72.dp),
                             enabled = false,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.12f),
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(
+                                    alpha = 0.12f
+                                ),
                                 contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.12f),
-                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(
+                                    alpha = 0.12f
+                                ),
+                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.38f
+                                )
                             ),
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                         ) {
-                            Text("Coming Soon", fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
+                            Text(
+                                stringResource(R.string.comingSoon),
+                                fontStyle = FontStyle.Italic,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
             }
         }
 
-        AnimatedVisibility(visible = selectedOption == stringResource(R.string.variable)) {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addVariable)) {
             BlockEntryCard(
                 label = stringResource(R.string.variableName),
                 inputText = inputText,
@@ -273,11 +285,15 @@ fun TopMenuPanel(
                         inputText = ""
                         selectedOption = selectBlockText
                     }
+                },
+                onCancel = {
+                    inputText = ""
+                    selectedOption = selectBlockText
                 }
             )
         }
 
-        AnimatedVisibility(visible = selectedOption == stringResource(R.string.ifElse)) {
+        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addIfElse)) {
             SimpleAddButtonCard {
                 onAddIfElse()
                 selectedOption = selectBlockText
@@ -305,7 +321,8 @@ fun BlockEntryCard(
     label: String,
     inputText: String,
     onInputChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onCancel: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -317,11 +334,37 @@ fun BlockEntryCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(onClick = onCancel) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cancel),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = inputText,
                 onValueChange = onInputChange,
-                label = { Text(label) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = MaterialTheme.typography.bodyMedium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
