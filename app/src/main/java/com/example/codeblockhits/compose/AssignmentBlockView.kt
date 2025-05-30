@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import kotlin.math.roundToInt
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun AssignmentBlockView(
@@ -29,15 +30,24 @@ fun AssignmentBlockView(
     var target by remember { mutableStateOf(block.target) }
     var expr by remember { mutableStateOf(block.expression) }
 
-    Box(
+    Card(
         modifier = modifier
+            .fillMaxWidth()
+            .padding(0.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
@@ -48,7 +58,7 @@ fun AssignmentBlockView(
                     Text(
                         text = "📝 ${stringResource(R.string.addAssignment)}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
 
                     IconButton(onClick = onRemove) {
@@ -59,8 +69,9 @@ fun AssignmentBlockView(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(4.dp))
 
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = target,
                         onValueChange = {
@@ -68,7 +79,12 @@ fun AssignmentBlockView(
                             onUpdate(block.copy(target = it, expression = expr))
                         },
                         label = { Text(stringResource(R.string.variable)) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -76,8 +92,11 @@ fun AssignmentBlockView(
                     Text(
                         text = "=",
                         style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     OutlinedTextField(
                         value = expr,
@@ -86,7 +105,12 @@ fun AssignmentBlockView(
                             onUpdate(block.copy(target = target, expression = it))
                         },
                         label = { Text(stringResource(R.string.expression)) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
                     )
                 }
             }

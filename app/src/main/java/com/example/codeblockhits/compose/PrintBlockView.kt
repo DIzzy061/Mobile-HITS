@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 import com.example.codeblockhits.data.PrintBlock
 import com.example.codeblockhits.data.evaluateExpression
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun PrintBlockView(
@@ -28,15 +29,23 @@ fun PrintBlockView(
         expressions.map { evaluateExpression(it, variablesMap) }
     }
 
-    Box(modifier = modifier) {
+    Card(
+        modifier = modifier
+            .width(280.dp)
+            .padding(0.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+    ) {
         Card(
-            modifier = Modifier
-                .width(280.dp)
-                .padding(8.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
@@ -48,7 +57,7 @@ fun PrintBlockView(
                     Text(
                         text = "🖨️ ${stringResource(R.string.addPrint)}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
 
                     IconButton(onClick = onRemove) {
@@ -62,7 +71,6 @@ fun PrintBlockView(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Expression fields
                 expressions.forEachIndexed { index, expr ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -77,7 +85,12 @@ fun PrintBlockView(
                                 onUpdate(block.copy(expressions = newExpressions))
                             },
                             label = { Text("${stringResource(R.string.expression)} ${index + 1}") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
                         )
 
                         IconButton(
@@ -105,7 +118,8 @@ fun PrintBlockView(
                     }
                 }
 
-                // Add expression button
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Button(
                     onClick = {
                         val newExpressions = expressions.toMutableList()
@@ -113,26 +127,28 @@ fun PrintBlockView(
                         expressions = newExpressions
                         onUpdate(block.copy(expressions = newExpressions))
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = stringResource(R.string.addBlock),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.addBlock))
                 }
 
-                // Show computed values
                 if (computedValues.any { it.isNotEmpty() }) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "${stringResource(R.string.calculateNow)}: ${computedValues.joinToString(", ")}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

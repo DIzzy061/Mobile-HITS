@@ -23,11 +23,11 @@
     <string name="addBlockToElse">Add block to Else</string>
     <string name="addAssignmentToElse">Add assignment to Else</string>
     <string name="addVariable">Add Variable</string>
-    <string name="addAssignment">Add Assignment</string>
-    <string name="addPrint">Add Print</string>
-    <string name="addIfElse">Add If/Else</string>
+    <string name="addAssignment">Assignment</string>
+    <string name="addPrint">Print</string>
+    <string name="addIfElse">If/Else</string>
     <string name="addArrow">Add arrow</string>
-    <string name="addWhile">Add While</string>
+    <string name="addWhile">While</string>
     <string name="loopBody">Loop body</string>
     <string name="thenBlocks">Then blocks</string>
     <string name="elseBlocks">Else blocks</string>

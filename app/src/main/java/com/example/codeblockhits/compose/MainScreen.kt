@@ -157,7 +157,28 @@ fun MainScreen() {
                     CodeBlocksList(
                         blocks = blocks,
                         erroredBlockId = erroredBlockId,
-                        onRemove = { id -> blocks = blocks.filter { it.id != id } },
+                        onRemove = { removedId ->
+                            val removedBlock = blocks.find { it.id == removedId }
+                            val targetOfRemovedBlockId = removedBlock?.nextBlockId
+
+                            var updatedBlocks = blocks.filter { it.id != removedId }
+
+                            updatedBlocks = updatedBlocks.map {
+                                if (it.nextBlockId == removedId) {
+                                    val newNextId = if (it.id == targetOfRemovedBlockId) null else targetOfRemovedBlockId
+                                    when (it) {
+                                        is VariableBlock -> it.copy(nextBlockId = newNextId)
+                                        is AssignmentBlock -> it.copy(nextBlockId = newNextId)
+                                        is IfElseBlock -> it.copy(nextBlockId = newNextId)
+                                        is PrintBlock -> it.copy(nextBlockId = newNextId)
+                                        is WhileBlock -> it.copy(nextBlockId = newNextId)
+                                    }
+                                } else {
+                                    it
+                                }
+                            }
+                            blocks = updatedBlocks
+                        },
                         onUpdate = { updated -> blocks = blocks.map { if (it.id == updated.id) updated else it } },
                         onAddToIfElse = { parentId, block, isThenBlock ->
                             blocks = blocks.map {

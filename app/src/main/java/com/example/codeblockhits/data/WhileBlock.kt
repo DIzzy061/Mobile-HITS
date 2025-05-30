@@ -1,6 +1,5 @@
 package com.example.codeblockhits.data
 
-import com.example.codeblockhits.data.CodeBlock
 
 data class WhileBlock(
     override val id: Int,

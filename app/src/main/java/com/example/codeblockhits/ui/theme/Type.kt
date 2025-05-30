@@ -9,15 +9,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 
-val LightColors = lightColorScheme(
-    primary = Color(0xFF1565C0),
-    onPrimary = Color.White,
-    surfaceVariant = Color(0xFFE3F2FD),
-    outline = Color(0xFFB0BEC5),
-    background = Color(0xFFF8FAFB)
-)
-
-
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,

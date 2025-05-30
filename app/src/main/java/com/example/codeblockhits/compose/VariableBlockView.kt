@@ -19,6 +19,7 @@ import com.example.codeblockhits.R
 import com.example.codeblockhits.data.VariableBlock
 import com.example.codeblockhits.data.VariableValue
 import com.example.codeblockhits.data.evaluateExpression
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun VariableBlockView(
@@ -33,17 +34,23 @@ fun VariableBlockView(
         evaluateExpression(block.value, variablesMap)
     }
 
-    Box(
+    Card(
         modifier = modifier
+            .width(220.dp)
+            .padding(0.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Card(
-            modifier = Modifier
-                .width(220.dp)
-                .padding(8.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
@@ -55,7 +62,7 @@ fun VariableBlockView(
                     Text(
                         text = "🧩 ${block.name}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -89,9 +96,8 @@ fun VariableBlockView(
                 Text(
                     text = "= $computedValue",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-
             }
         }
     }

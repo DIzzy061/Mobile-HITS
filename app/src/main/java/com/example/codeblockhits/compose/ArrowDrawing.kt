@@ -15,6 +15,18 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
+fun getRectEdgeIntersection(center: Offset, other: Offset, size: Size): Offset {
+    val hw = size.width / 2f
+    val hh = size.height / 2f
+    val dx = other.x - center.x
+    val dy = other.y - center.y
+    if (dx == 0f && dy == 0f) return center
+    val absDx = kotlin.math.abs(dx)
+    val absDy = kotlin.math.abs(dy)
+    val scale = if (absDx * hh > absDy * hw) hw / absDx else hh / absDy
+    return Offset(center.x + dx * scale, center.y + dy * scale)
+}
+
 @Composable
 fun DrawBlockConnectionArrow(
     sourceBlockOffset: Offset,
@@ -26,29 +38,8 @@ fun DrawBlockConnectionArrow(
     val sourceCenter = sourceBlockOffset + Offset(sourceBlockSize.width / 2f, sourceBlockSize.height / 2f)
     val targetCenter = targetBlockOffset + Offset(targetBlockSize.width / 2f, targetBlockSize.height / 2f)
 
-    val dx = targetCenter.x - sourceCenter.x
-    val dy = targetCenter.y - sourceCenter.y
-
-    val startPoint: Offset
-    val endPoint: Offset
-
-    if (kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
-        if (dx > 0) {
-            startPoint = Offset(sourceBlockOffset.x + sourceBlockSize.width, sourceCenter.y)
-            endPoint = Offset(targetBlockOffset.x, targetCenter.y)
-        } else {
-            startPoint = Offset(sourceBlockOffset.x, sourceCenter.y)
-            endPoint = Offset(targetBlockOffset.x + targetBlockSize.width, targetCenter.y)
-        }
-    } else {
-        if (dy > 0) {
-            startPoint = Offset(sourceCenter.x, sourceBlockOffset.y + sourceBlockSize.height)
-            endPoint = Offset(targetCenter.x, targetBlockOffset.y)
-        } else {
-            startPoint = Offset(sourceCenter.x, sourceBlockOffset.y)
-            endPoint = Offset(targetCenter.x, targetBlockOffset.y + targetBlockSize.height)
-        }
-    }
+    val startPoint = getRectEdgeIntersection(sourceCenter, targetCenter, sourceBlockSize)
+    val endPoint = getRectEdgeIntersection(targetCenter, sourceCenter, targetBlockSize)
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawLine(

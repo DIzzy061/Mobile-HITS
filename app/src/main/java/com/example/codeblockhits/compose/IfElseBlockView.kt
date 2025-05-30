@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun IfElseBlockView(
@@ -50,6 +51,11 @@ fun IfElseBlockView(
     var errorMessage by remember { mutableStateOf("") }
     var errorMessageText = stringResource(R.string.variableNameExists)
 
+    val dialogButtonColors = ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    )
+
     if (showAddBlockDialog) {
         AlertDialog(
             onDismissRequest = { showAddBlockDialog = false },
@@ -67,7 +73,9 @@ fun IfElseBlockView(
                             showAddBlockDialog = false
                             showVariableNameDialog = true
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🧩 ${stringResource(R.string.variable)}")
                     }
@@ -82,7 +90,9 @@ fun IfElseBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("📝 ${stringResource(R.string.addAssignment)}")
                     }
@@ -97,7 +107,9 @@ fun IfElseBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🖨️ ${stringResource(R.string.addPrint)}")
                     }
@@ -112,9 +124,11 @@ fun IfElseBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("🔀 ${stringResource(R.string.addIfElse)}")
+                        Text("�� ${stringResource(R.string.addIfElse)}")
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
@@ -127,7 +141,9 @@ fun IfElseBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🔄 ${stringResource(R.string.addWhile)}")
                     }
@@ -181,7 +197,12 @@ fun IfElseBlockView(
                 OutlinedTextField(
                     value = newVarName,
                     onValueChange = { newVarName = it },
-                    label = { Text(stringResource(R.string.variableName)) }
+                    label = { Text(stringResource(R.string.variableName)) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
         )
@@ -202,278 +223,265 @@ fun IfElseBlockView(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(12.dp)
             ) {
-                Text("🔀 ${stringResource(R.string.ifElse)}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = leftOperand,
-                    onValueChange = {
-                        leftOperand = it
-                        onUpdate(block.copy(leftOperand = it, operator = operator, rightOperand = rightOperand))
-                    },
-                    label = { Text(stringResource(R.string.leftOperand)) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box {
-                    Button(onClick = { operatorMenuExpanded = true }) {
-                        Text(operator)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "🔀 ${stringResource(R.string.ifElse)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    IconButton(onClick = onRemove) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
-                    DropdownMenu(
-                        expanded = operatorMenuExpanded,
-                        onDismissRequest = { operatorMenuExpanded = false }
-                    ) {
-                        operatorOptions.forEach { op ->
-                            DropdownMenuItem(
-                                text = { Text(op) },
-                                onClick = {
-                                    operator = op
-                                    operatorMenuExpanded = false
-                                    onUpdate(block.copy(leftOperand = leftOperand, operator = op, rightOperand = rightOperand))
-                                }
-                            )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = leftOperand,
+                        onValueChange = {
+                            leftOperand = it
+                            onUpdate(block.copy(leftOperand = it, operator = operator, rightOperand = rightOperand))
+                        },
+                        label = { Text(stringResource(R.string.leftOperand)) },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box {
+                        Button(
+                            onClick = { operatorMenuExpanded = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(operator)
+                        }
+                        DropdownMenu(
+                            expanded = operatorMenuExpanded,
+                            onDismissRequest = { operatorMenuExpanded = false }
+                        ) {
+                            operatorOptions.forEach { op ->
+                                DropdownMenuItem(
+                                    text = { Text(op) },
+                                    onClick = {
+                                        operator = op
+                                        operatorMenuExpanded = false
+                                        onUpdate(block.copy(leftOperand = leftOperand, operator = op, rightOperand = rightOperand))
+                                    }
+                                )
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                OutlinedTextField(
-                    value = rightOperand,
-                    onValueChange = {
-                        rightOperand = it
-                        onUpdate(block.copy(leftOperand = leftOperand, operator = operator, rightOperand = it))
-                    },
-                    label = { Text(stringResource(R.string.rightOperand)) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("${stringResource(R.string.thenBlocks)} (${block.thenBlocks.size})", 
-                    color = Color.Green,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                IconButton(onClick = { showThenBlocks = !showThenBlocks }) {
-                    Icon(
-                        if (showThenBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (showThenBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                    OutlinedTextField(
+                        value = rightOperand,
+                        onValueChange = {
+                            rightOperand = it
+                            onUpdate(block.copy(leftOperand = leftOperand, operator = operator, rightOperand = it))
+                        },
+                        label = { Text(stringResource(R.string.rightOperand)) },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
                     )
                 }
-            }
 
-            AnimatedVisibility(visible = showThenBlocks) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 500.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Text(
+                        "${stringResource(R.string.thenBlocks)} (${block.thenBlocks.size})",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    IconButton(onClick = { showThenBlocks = !showThenBlocks }) {
+                        Icon(
+                            if (showThenBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (showThenBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = showThenBlocks) {
                     Column(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp)
                     ) {
                         LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(start = 16.dp)
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
                         ) {
                             items(block.thenBlocks) { childBlock ->
-                                val updateList = { updated: CodeBlock ->
-                                    val newList = block.thenBlocks.map { if (it.id == updated.id) updated else it }
-                                    onUpdate(block.copy(thenBlocks = newList))
-                                }
-                                val removeBlock = {
-                                    val newList = block.thenBlocks.filter { it.id != childBlock.id }
-                                    onUpdate(block.copy(thenBlocks = newList))
-                                }
+                                val updateList = { updated: CodeBlock -> onUpdate(block.copy(thenBlocks = block.thenBlocks.map { if (it.id == updated.id) updated else it })) }
+                                val removeBlock = { onUpdate(block.copy(thenBlocks = block.thenBlocks.filter { it.id != childBlock.id })) }
 
-                                when (childBlock) {
-                                    is VariableBlock -> VariableBlockView(
-                                        block = childBlock,
-                                        onValueChange = { newValue ->
-                                            val updated = childBlock.copy(value = newValue)
-                                            updateList(updated)
-                                        },
-                                        onRemove = removeBlock,
-                                        variablesMap = variablesMap
-                                    )
-                                    is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                    is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                    is IfElseBlock -> {
-                                        val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
-                                            val updatedBlock = if (toThen) {
-                                                childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
-                                            } else {
-                                                childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
-                                            }
-                                            updateList(updatedBlock)
-                                        }
-                                        IfElseBlockView(
-                                            childBlock,
-                                            updateList,
-                                            removeBlock,
-                                            localOnAddToIfElse,
-                                            variablesMap,
-                                            nextId,
-                                            onIdIncrement
-                                        )
-                                    }
-                                    is WhileBlock -> WhileBlockView(
-                                        block = childBlock,
-                                        onUpdate = updateList,
-                                        onRemove = removeBlock,
-                                        variablesMap = variablesMap,
-                                        nextId = nextId,
-                                        onIdIncrement = onIdIncrement
-                                    )
-                                }
+                                BlockViewSwitcher(childBlock, updateList, removeBlock, onAddToIfElse, variablesMap, nextId, onIdIncrement)
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
-                        }
-                        
-                        Button(
-                            onClick = {
-                                isAddingToThen = true
-                                showAddBlockDialog = true
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.addBlockToThen))
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("${stringResource(R.string.elseBlocks)} (${block.elseBlocks.size})", 
-                    color = Color.Red,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                IconButton(onClick = { showElseBlocks = !showElseBlocks }) {
-                    Icon(
-                        if (showElseBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (showElseBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
-                    )
-                }
-            }
-
-            AnimatedVisibility(visible = showElseBlocks) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 500.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
+                    Text(
+                        "${stringResource(R.string.elseBlocks)} (${block.elseBlocks.size})",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    IconButton(onClick = { showElseBlocks = !showElseBlocks }) {
+                        Icon(
+                            if (showElseBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (showElseBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                        )
+                    }
+                }
+
+                AnimatedVisibility(visible = showElseBlocks) {
+                     Column(
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp)
                     ) {
                         LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(start = 16.dp)
+                            modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)
                         ) {
                             items(block.elseBlocks) { childBlock ->
-                                val updateList = { updated: CodeBlock ->
-                                    val newList = block.elseBlocks.map { if (it.id == updated.id) updated else it }
-                                    onUpdate(block.copy(elseBlocks = newList))
-                                }
-                                val removeBlock = {
-                                    val newList = block.elseBlocks.filter { it.id != childBlock.id }
-                                    onUpdate(block.copy(elseBlocks = newList))
-                                }
+                                val updateList = { updated: CodeBlock -> onUpdate(block.copy(elseBlocks = block.elseBlocks.map { if (it.id == updated.id) updated else it })) }
+                                val removeBlock = { onUpdate(block.copy(elseBlocks = block.elseBlocks.filter { it.id != childBlock.id })) }
 
-                                when (childBlock) {
-                                    is VariableBlock -> VariableBlockView(
-                                        block = childBlock,
-                                        onValueChange = { newValue ->
-                                            val updated = childBlock.copy(value = newValue)
-                                            updateList(updated)
-                                        },
-                                        onRemove = removeBlock,
-                                        variablesMap = variablesMap
-                                    )
-                                    is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                    is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
-                                    is IfElseBlock -> {
-                                        val localOnAddToIfElse = { targetId: Int, newBlock: CodeBlock, toThen: Boolean ->
-                                            val updatedBlock = if (toThen) {
-                                                childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
-                                            } else {
-                                                childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
-                                            }
-                                            updateList(updatedBlock)
-                                        }
-                                        IfElseBlockView(
-                                            childBlock,
-                                            updateList,
-                                            removeBlock,
-                                            localOnAddToIfElse,
-                                            variablesMap,
-                                            nextId,
-                                            onIdIncrement
-                                        )
-                                    }
-                                    is WhileBlock -> WhileBlockView(
-                                        block = childBlock,
-                                        onUpdate = updateList,
-                                        onRemove = removeBlock,
-                                        variablesMap = variablesMap,
-                                        nextId = nextId,
-                                        onIdIncrement = onIdIncrement
-                                    )
-                                }
+                                BlockViewSwitcher(childBlock, updateList, removeBlock, onAddToIfElse, variablesMap, nextId, onIdIncrement)
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
-                        
-                        Button(
-                            onClick = {
-                                isAddingToThen = false
-                                showAddBlockDialog = true
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.addBlockToElse))
-                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = {
+                            isAddingToThen = true
+                            showAddBlockDialog = true
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.addBlockToThen))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            isAddingToThen = false
+                            showAddBlockDialog = true
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = dialogButtonColors,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.addBlockToElse))
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BlockViewSwitcher(
+    childBlock: CodeBlock,
+    updateList: (CodeBlock) -> Unit,
+    removeBlock: () -> Unit,
+    onAddToIfElseNested: (Int, CodeBlock, Boolean) -> Unit,
+    variablesMap: Map<String, VariableValue>,
+    nextId: Int,
+    onIdIncrement: () -> Unit
+) {
+    when (childBlock) {
+        is VariableBlock -> VariableBlockView(
+            block = childBlock,
+            onValueChange = { newValue -> updateList(childBlock.copy(value = newValue)) },
+            onRemove = removeBlock,
+            variablesMap = variablesMap
+        )
+        is AssignmentBlock -> AssignmentBlockView(childBlock, updateList, removeBlock, variablesMap)
+        is PrintBlock -> PrintBlockView(childBlock, updateList, removeBlock, variablesMap)
+        is IfElseBlock -> {
+            val localOnAddToIfElse = { parentId: Int, newBlock: CodeBlock, toThen: Boolean ->
+                val updatedBlock = if (toThen) {
+                    childBlock.copy(thenBlocks = childBlock.thenBlocks + newBlock)
+                } else {
+                    childBlock.copy(elseBlocks = childBlock.elseBlocks + newBlock)
+                }
+                updateList(updatedBlock)
+            }
+            IfElseBlockView(
+                childBlock,
+                updateList,
+                removeBlock,
+                localOnAddToIfElse,
+                variablesMap,
+                nextId,
+                onIdIncrement
+            )
+        }
+        is WhileBlock -> WhileBlockView(
+            block = childBlock,
+            onUpdate = updateList,
+            onRemove = removeBlock,
+            variablesMap = variablesMap,
+            nextId = nextId,
+            onIdIncrement = onIdIncrement
+        )
     }
 }

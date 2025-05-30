@@ -1,6 +1,5 @@
 package com.example.codeblockhits.data
 
-import com.example.codeblockhits.data.CodeBlock
 
 data class IfElseBlock(
     override val id: Int,

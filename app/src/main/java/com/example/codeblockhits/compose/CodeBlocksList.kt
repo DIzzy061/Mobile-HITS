@@ -31,6 +31,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 
 @Composable
 fun CodeBlocksList(
@@ -51,16 +52,26 @@ fun CodeBlocksList(
     val blockSizes = remember { mutableStateMapOf<Int, Size>() }
     var draggingBlockId by remember { mutableStateOf<Int?>(null) }
     val isDarkTheme = isSystemInDarkTheme()
-    val arrowColor = if (isDarkTheme) Color.White else Color.Black
+    val arrowColor = MaterialTheme.colorScheme.outline
     val errorHighlightColor = MaterialTheme.colorScheme.error
 
     Box(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
         blocks.forEach { block ->
-            val fromCenter = blockCenters[block.id]
-            val toId = block.nextBlockId
-            val toCenter = toId?.let { blockCenters[it] }
-            if (fromCenter != null && toCenter != null) {
-                ArrowLineThemeAware(from = fromCenter, to = toCenter, color = arrowColor)
+            val sourceOffset = blockOffsets[block.id]
+            val sourceSize = blockSizes[block.id]
+            
+            val targetId = block.nextBlockId
+            val targetOffset = targetId?.let { blockOffsets[it] }
+            val targetSize = targetId?.let { blockSizes[it] }
+
+            if (sourceOffset != null && sourceSize != null && targetOffset != null && targetSize != null) {
+                DrawBlockConnectionArrow(
+                    sourceBlockOffset = sourceOffset,
+                    sourceBlockSize = sourceSize,
+                    targetBlockOffset = targetOffset,
+                    targetBlockSize = targetSize,
+                    color = arrowColor
+                )
             }
         }
 
@@ -88,18 +99,32 @@ fun CodeBlocksList(
                         blockCenters[block.id] = position + Offset(size.width / 2f, size.height / 2f)
                         blockSizes[block.id] = Size(size.width.toFloat(), size.height.toFloat())
                     }
+                    .then(
+                        if (isArrowMode && selectedSourceBlockId == block.id) {
+                            Modifier
+                                .shadow(elevation = 8.dp, shape = RoundedCornerShape(8.dp))
+                                .border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                        } else if (erroredBlockId == block.id) {
+                            Modifier.border(
+                                width = 2.dp,
+                                color = errorHighlightColor,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
                     .background(
                         when {
                             erroredBlockId == block.id -> errorHighlightColor.copy(alpha = 0.3f)
                             draggingBlockId == block.id -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                            isArrowMode && selectedSourceBlockId == block.id -> Color.Yellow.copy(alpha = 0.3f)
+                            isArrowMode && selectedSourceBlockId == block.id -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
                             else -> Color.Transparent
                         }
-                    )
-                    .border(
-                        width = if (erroredBlockId == block.id) 2.dp else 0.dp,
-                        color = if (erroredBlockId == block.id) errorHighlightColor else Color.Transparent,
-                        shape = RoundedCornerShape(4.dp)
                     )
                     .padding(8.dp)
                     .then(
@@ -142,34 +167,3 @@ fun CodeBlocksList(
 }
 
 
-@Composable
-fun ArrowLineThemeAware(from: Offset, to: Offset, color: Color) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawLine(
-            color = color,
-            start = from,
-            end = to,
-            strokeWidth = 3f,
-            cap = StrokeCap.Round,
-            alpha = 0.9f
-        )
-        val arrowHeadLength = 18f
-        val arrowHeadAngle = 28f
-        val angle = atan2(to.y - from.y, to.x - from.x) * 180f / PI
-        rotate(angle.toFloat(), pivot = to) {
-            val path = Path().apply {
-                moveTo(to.x, to.y)
-                lineTo(
-                    to.x - arrowHeadLength * cos(Math.toRadians(arrowHeadAngle.toDouble())).toFloat(),
-                    to.y - arrowHeadLength * sin(Math.toRadians(arrowHeadAngle.toDouble())).toFloat()
-                )
-                lineTo(
-                    to.x - arrowHeadLength * cos(Math.toRadians(-arrowHeadAngle.toDouble())).toFloat(),
-                    to.y - arrowHeadLength * sin(Math.toRadians(-arrowHeadAngle.toDouble())).toFloat()
-                )
-                close()
-            }
-            drawPath(path, color = color, alpha = 0.9f)
-        }
-    }
-}

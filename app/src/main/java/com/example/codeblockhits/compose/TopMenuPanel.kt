@@ -18,6 +18,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun TopMenuPanel(
@@ -41,56 +45,40 @@ fun TopMenuPanel(
 
     val isDarkTheme = isSystemInDarkTheme()
 
-    val headerBackgroundColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.primaryContainer
-    else Color(0xFFE3F2FD)
+    val headerBackgroundColor = MaterialTheme.colorScheme.primaryContainer
 
-    val headerTextColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.onPrimaryContainer
-        else Color(0xFF1565C0)
+    val headerTextColor = MaterialTheme.colorScheme.onPrimaryContainer
 
-    val menuBackgroundColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.surface
-        else Color(0xFFF5F5F5)
+    val menuBackgroundColor = MaterialTheme.colorScheme.surface
 
-    val fabColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.tertiary
-        else Color(0xFF26A69A)
+    val fabColor = MaterialTheme.colorScheme.tertiary
 
-    val fabContentColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.onTertiary
-        else Color.White
+    val fabContentColor = MaterialTheme.colorScheme.onTertiary
 
-    val evaluateButtonColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.primary
-        else Color(0xFF42A5F5)
+    val evaluateButtonColor = MaterialTheme.colorScheme.primary
 
-    val evaluateButtonContentColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.onPrimary
-        else Color.White
+    val evaluateButtonContentColor = MaterialTheme.colorScheme.onPrimary
 
-    val arrowButtonColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.secondary
-        else Color(0xFFFF7043)
+    val arrowButtonColor = MaterialTheme.colorScheme.secondary
 
-    val arrowButtonContentColor =
-        if (isDarkTheme) MaterialTheme.colorScheme.onSecondary
-        else Color.White
+    val arrowButtonContentColor = MaterialTheme.colorScheme.onSecondary
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = headerBackgroundColor,
-            tonalElevation = 4.dp,
-            shadowElevation = 4.dp
+            tonalElevation = 8.dp,
+            shadowElevation = 8.dp,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Text(
                 text = stringResource(R.string.appName),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 color = headerTextColor,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 20.dp),
                 textAlign = TextAlign.Center
             )
         }
@@ -108,32 +96,36 @@ fun TopMenuPanel(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FloatingActionButton(
+                ExtendedFloatingActionButton(
                     onClick = { expanded = !expanded },
-                    modifier = Modifier.size(40.dp),
-                    containerColor = fabColor,
-                    contentColor = fabContentColor,
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    icon = {
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text(stringResource(R.string.addBlock)) }
+                )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
                     onClick = onEvaluateAll,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = evaluateButtonColor,
-                        contentColor = evaluateButtonContentColor
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.calculate))
                 }
@@ -143,13 +135,17 @@ fun TopMenuPanel(
                 Button(
                     onClick = onArrowMode,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = arrowButtonColor,
-                        contentColor = arrowButtonContentColor
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.addArrow))
                 }
@@ -160,26 +156,33 @@ fun TopMenuPanel(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(stringResource(R.string.addBlock), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.addBlock),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         listOf(
                             variableText,
                             ifElseText,
-                            assignmentText,
+                            printText,
                             whileText
                         ).forEach { label ->
-                            OutlinedButton(
+                            Button(
                                 onClick = {
                                     when (label) {
                                         variableText -> selectedOption = label
@@ -187,8 +190,8 @@ fun TopMenuPanel(
                                             onAddIfElse()
                                             selectedOption = selectBlockText
                                         }
-                                        assignmentText -> {
-                                            onAddAssignment("", "")
+                                        printText -> {
+                                            onAddPrint()
                                             selectedOption = selectBlockText
                                         }
                                         whileText -> {
@@ -197,38 +200,62 @@ fun TopMenuPanel(
                                         }
                                     }
                                 },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.weight(1f)
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .defaultMinSize(minHeight = 72.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                             ) {
-                                Text(label)
+                                Text(label, textAlign = TextAlign.Center)
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedButton(
+                        Button(
                             onClick = {
-                                onAddPrint()
+                                onAddAssignment("", "")
                                 selectedOption = selectBlockText
                             },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 72.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                         ) {
-                            Text(printText)
+                            Text(assignmentText, textAlign = TextAlign.Center)
                         }
 
-                        OutlinedButton(
+                        Button(
                             onClick = { },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1f),
-                            enabled = false
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 72.dp),
+                            enabled = false,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.12f),
+                                contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.12f),
+                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                         ) {
-                            Text("Coming Soon")
+                            Text("Coming Soon", fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -253,13 +280,6 @@ fun TopMenuPanel(
         AnimatedVisibility(visible = selectedOption == stringResource(R.string.ifElse)) {
             SimpleAddButtonCard {
                 onAddIfElse()
-                selectedOption = selectBlockText
-            }
-        }
-
-        AnimatedVisibility(visible = selectedOption == stringResource(R.string.addAssignment)) {
-            SimpleAddButtonCard {
-                onAddAssignment("", "")
                 selectedOption = selectBlockText
             }
         }
@@ -290,9 +310,11 @@ fun BlockEntryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
@@ -302,12 +324,16 @@ fun BlockEntryCard(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = onSubmit,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text(stringResource(R.string.addBlock))
             }
@@ -320,16 +346,22 @@ fun SimpleAddButtonCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Button(
             onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         ) {
             Text(stringResource(R.string.addBlock))
         }

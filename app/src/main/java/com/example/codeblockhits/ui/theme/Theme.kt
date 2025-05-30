@@ -17,31 +17,54 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Blue80,
-    onPrimary = Color.White,
-    secondary = BlueGrey80,
-    tertiary = LightBlue80,
-    background = Color(0xFF1A1C1E),
-    surface = Color(0xFF1A1C1E),
-    surfaceVariant = Color(0xFF27292B),
-    onSurfaceVariant = Color.White.copy(alpha = 0.8f)
+    primary = TealDarkPrimary,
+    onPrimary = TealDarkOnPrimary,
+    primaryContainer = TealDarkPrimaryContainer,
+    onPrimaryContainer = TealDarkOnPrimaryContainer,
+    secondary = TealDarkSecondary,
+    onSecondary = TealDarkOnSecondary,
+    secondaryContainer = TealDarkSecondaryContainer,
+    onSecondaryContainer = TealDarkOnSecondaryContainer,
+    tertiary = TealDarkTertiary,
+    onTertiary = TealDarkOnTertiary,
+    tertiaryContainer = TealDarkTertiaryContainer,
+    onTertiaryContainer = TealDarkOnTertiaryContainer,
+    background = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E),
+    surfaceVariant = TealDarkSurfaceVariant,
+    onSurface = TealDarkOnPrimaryContainer,
+    onSurfaceVariant = TealDarkOnPrimaryContainer,
+    error = Color(0xFFCF6679),
+    onError = Color.Black,
+    outline = TealDarkOutline
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Blue40,
-    onPrimary = Color.White,
-    secondary = BlueGrey40,
-    tertiary = LightBlue40,
-    background = Color(0xFFF8FAFB),
-    surface = Color(0xFFF8FAFB),
-    surfaceVariant = Color(0xFFE3F2FD),
-    onSurfaceVariant = Color(0xFF1A1C1E)
+    primary = TealLightPrimary,
+    onPrimary = TealLightOnPrimary,
+    primaryContainer = TealLightPrimaryContainer,
+    onPrimaryContainer = TealLightOnPrimaryContainer,
+    secondary = TealLightSecondary,
+    onSecondary = TealLightOnSecondary,
+    secondaryContainer = TealLightSecondaryContainer,
+    onSecondaryContainer = TealLightOnSecondaryContainer,
+    tertiary = TealLightTertiary,
+    onTertiary = TealLightOnTertiary,
+    tertiaryContainer = TealLightTertiaryContainer,
+    onTertiaryContainer = TealLightOnTertiaryContainer,
+    background = Color(0xFFFBFFFF),
+    surface = Color(0xFFF0FDF4),
+    surfaceVariant = TealLightSurfaceVariant,
+    onSurface = TealLightOnPrimaryContainer,
+    onSurfaceVariant = TealLightOnPrimaryContainer,
+    error = Color(0xFFB00020),
+    onError = Color.White,
+    outline = TealLightOutline
 )
 
 @Composable
 fun CodeBlockHITSTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

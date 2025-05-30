@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.codeblockhits.R
 import com.example.codeblockhits.data.*
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 
 @Composable
 fun WhileBlockView(
@@ -64,7 +65,12 @@ fun WhileBlockView(
                             showAddBlockDialog = false
                             showVariableNameDialog = true
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🧩 ${stringResource(R.string.variable)}")
                     }
@@ -83,7 +89,12 @@ fun WhileBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("📝 ${stringResource(R.string.addAssignment)}")
                     }
@@ -98,7 +109,12 @@ fun WhileBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🖨️ ${stringResource(R.string.addPrint)}")
                     }
@@ -113,7 +129,12 @@ fun WhileBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🔀 ${stringResource(R.string.addIfElse)}")
                     }
@@ -128,7 +149,12 @@ fun WhileBlockView(
                             onIdIncrement()
                             showAddBlockDialog = false
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("🔄 ${stringResource(R.string.addWhile)}")
                     }
@@ -203,163 +229,205 @@ fun WhileBlockView(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(12.dp)
             ) {
-                Text("🔄 While", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = leftOperand,
-                    onValueChange = {
-                        leftOperand = it
-                        updateCondition()
-                    },
-                    label = { Text(stringResource(R.string.leftOperand)) },
-                    modifier = Modifier.weight(1f)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box {
-                    Button(onClick = { operatorMenuExpanded = true }) {
-                        Text(operator)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "🔄 While",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    IconButton(onClick = onRemove) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
-                    DropdownMenu(
-                        expanded = operatorMenuExpanded,
-                        onDismissRequest = { operatorMenuExpanded = false }
-                    ) {
-                        operatorOptions.forEach { op ->
-                            DropdownMenuItem(
-                                text = { Text(op) },
-                                onClick = {
-                                    operator = op
-                                    operatorMenuExpanded = false
-                                    updateCondition()
-                                }
-                            )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = leftOperand,
+                        onValueChange = {
+                            leftOperand = it
+                            updateCondition()
+                        },
+                        label = { Text(stringResource(R.string.leftOperand)) },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box {
+                        Button(
+                            onClick = { operatorMenuExpanded = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(operator)
+                        }
+                        DropdownMenu(
+                            expanded = operatorMenuExpanded,
+                            onDismissRequest = { operatorMenuExpanded = false }
+                        ) {
+                            operatorOptions.forEach { op ->
+                                DropdownMenuItem(
+                                    text = { Text(op) },
+                                    onClick = {
+                                        operator = op
+                                        operatorMenuExpanded = false
+                                        updateCondition()
+                                    }
+                                )
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                OutlinedTextField(
-                    value = rightOperand,
-                    onValueChange = {
-                        rightOperand = it
-                        updateCondition()
-                    },
-                    label = { Text(stringResource(R.string.rightOperand)) },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("${stringResource(R.string.loopBody)} (${block.innerBlocks.size})", 
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                IconButton(onClick = { showInnerBlocks = !showInnerBlocks }) {
-                    Icon(
-                        if (showInnerBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (showInnerBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                    OutlinedTextField(
+                        value = rightOperand,
+                        onValueChange = {
+                            rightOperand = it
+                            updateCondition()
+                        },
+                        label = { Text(stringResource(R.string.rightOperand)) },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        )
                     )
                 }
-            }
 
-            AnimatedVisibility(visible = showInnerBlocks) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .padding(start = 16.dp)
-                    ) {
-                        items(block.innerBlocks) { child ->
-                            val updateInner = { updated: CodeBlock ->
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks.map {
-                                    if (it.id == updated.id) updated else it
-                                }))
-                            }
-                            val removeInner = {
-                                onUpdate(block.copy(innerBlocks = block.innerBlocks.filter {
-                                    it.id != child.id
-                                }))
-                            }
+                    Text("${stringResource(R.string.loopBody)} (${block.innerBlocks.size})",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(onClick = { showInnerBlocks = !showInnerBlocks }) {
+                        Icon(
+                            if (showInnerBlocks) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (showInnerBlocks) stringResource(R.string.hideBlocks) else stringResource(R.string.showBlocks)
+                        )
+                    }
+                }
 
-                            when (child) {
-                                is VariableBlock -> VariableBlockView(
-                                    block = child,
-                                    onValueChange = { v -> updateInner(child.copy(value = v)) },
-                                    onRemove = removeInner,
-                                    variablesMap = variablesMap
-                                )
-                                is AssignmentBlock -> AssignmentBlockView(child, updateInner, removeInner, variablesMap)
-                                is PrintBlock -> PrintBlockView(child, updateInner, removeInner, variablesMap)
-                                is IfElseBlock -> IfElseBlockView(
-                                    child,
-                                    updateInner,
-                                    removeInner,
-                                    { parentId, newBlock, isThen ->
-                                        val updatedInner = if (isThen) {
-                                            child.thenBlocks + newBlock
-                                        } else {
-                                            child.elseBlocks + newBlock
-                                        }
-                                        updateInner(child.copy(
-                                            thenBlocks = if (isThen) updatedInner else child.thenBlocks,
-                                            elseBlocks = if (!isThen) updatedInner else child.elseBlocks
-                                        ))
-                                    },
-                                    variablesMap,
-                                    nextId,
-                                    onIdIncrement
-                                )
-                                is WhileBlock -> WhileBlockView(
-                                    child,
-                                    updateInner,
-                                    removeInner,
-                                    variablesMap,
-                                    nextId,
-                                    onIdIncrement
-                                )
+                AnimatedVisibility(visible = showInnerBlocks) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
+                                .padding(start = 16.dp)
+                        ) {
+                            items(block.innerBlocks) { child ->
+                                val updateInner = { updated: CodeBlock ->
+                                    onUpdate(block.copy(innerBlocks = block.innerBlocks.map {
+                                        if (it.id == updated.id) updated else it
+                                    }))
+                                }
+                                val removeInner = {
+                                    onUpdate(block.copy(innerBlocks = block.innerBlocks.filter {
+                                        it.id != child.id
+                                    }))
+                                }
+
+                                when (child) {
+                                    is VariableBlock -> VariableBlockView(
+                                        block = child,
+                                        onValueChange = { v -> updateInner(child.copy(value = v)) },
+                                        onRemove = removeInner,
+                                        variablesMap = variablesMap
+                                    )
+                                    is AssignmentBlock -> AssignmentBlockView(child, updateInner, removeInner, variablesMap)
+                                    is PrintBlock -> PrintBlockView(child, updateInner, removeInner, variablesMap)
+                                    is IfElseBlock -> IfElseBlockView(
+                                        child,
+                                        updateInner,
+                                        removeInner,
+                                        { parentId, newBlock, isThen ->
+                                            val targetList = if (isThen) child.thenBlocks else child.elseBlocks
+                                            val updatedInnerBlocks = targetList + newBlock
+                                            val updatedChild = if (isThen) {
+                                                child.copy(thenBlocks = updatedInnerBlocks)
+                                            } else {
+                                                child.copy(elseBlocks = updatedInnerBlocks)
+                                            }
+                                            updateInner(updatedChild)
+                                        },
+                                        variablesMap,
+                                        nextId,
+                                        onIdIncrement
+                                    )
+                                    is WhileBlock -> WhileBlockView(
+                                        child,
+                                        updateInner,
+                                        removeInner,
+                                        variablesMap,
+                                        nextId,
+                                        onIdIncrement
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                 }
-            }
 
-            // Fixed button at the bottom
-            Button(
-                onClick = { showAddBlockDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.addBlock))
+                Button(
+                    onClick = { showAddBlockDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.addBlock))
+                }
             }
         }
     }
