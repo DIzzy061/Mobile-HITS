@@ -130,7 +130,7 @@ fun IfElseBlockView(
                         colors = dialogButtonColors,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("�� ${stringResource(R.string.addIfElse)}")
+                        Text("🔀 ${stringResource(R.string.addIfElse)}")
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
